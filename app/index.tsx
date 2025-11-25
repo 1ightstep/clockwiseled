@@ -1,17 +1,25 @@
+import { COLORS } from "@/constants/theme";
+import { useAuth } from "@/hooks/useAuth";
+import { Redirect } from "expo-router";
 import { Text, View } from "react-native";
-import { useAuth } from "../hooks/useAuth";
 
 export default function Index() {
   const { user } = useAuth();
+
   return (
     <View
       style={{
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
+        backgroundColor: COLORS.background,
       }}
     >
-      {user ? <Text>Welcome, {user.name}!</Text> : <Text>Please log in.</Text>}
+      {user ? (
+        <Text>Welcome, {user.name}!</Text>
+      ) : (
+        <Redirect href="/auth/signin" />
+      )}
     </View>
   );
 }
