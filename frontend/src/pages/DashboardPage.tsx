@@ -1,147 +1,148 @@
-import { ThemeButton } from "@/components/ThemeButton";
-import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/useToast";
-import { FiWifi } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
 import "./DashboardPage.css";
 
-const schedules = [
+type ScheduleItem = {
+  id: string;
+  title: string;
+  day: string;
+  description: string;
+};
+
+type DeviceItem = {
+  id: string;
+  name: string;
+  schedules: string[];
+};
+
+const schedules: ScheduleItem[] = [
   {
-    id: "schedule-1",
-    title: "Morning Routine",
-    days: "Sun · Mon · Tue · Wed · Thu · Fri · Sat",
-    tasks: "Lights on, blinds open, brew coffee",
-    nextTrigger: "Starts in 15 min",
+    id: "wake",
+    title: "Wake Up Sync",
+    day: "Mon",
+    description: "Lights fade up with sunrise tones to ease into the day.",
   },
   {
-    id: "schedule-2",
-    title: "Work Focus",
-    days: "Weekdays",
-    tasks: "Desk lamp on, thermostat 70°F, lo-fi playlist",
-    nextTrigger: "Starts in 1 hr",
+    id: "focus",
+    title: "Deep Focus",
+    day: "Tue",
+    description: "Muted palette keeps the studio calm during core hours.",
   },
   {
-    id: "schedule-3",
-    title: "Evening Wind Down",
-    days: "Sun - Fri",
-    tasks: "Dim lights, diffuser on, lock doors",
-    nextTrigger: "Starts in 12 hrs",
+    id: "stretch",
+    title: "Midweek Stretch",
+    day: "Wed",
+    description: "Gentle cues remind the team to pause, move, and reset.",
+  },
+  {
+    id: "sunset",
+    title: "Sunset Wind-Down",
+    day: "Thu",
+    description: "Warm gradients dim devices ahead of evening routines.",
+  },
+
+  {
+    id: "sunset",
+    title: "Sunset Wind-Down",
+    day: "Thu",
+    description: "Warm gradients dim devices ahead of evening routines.",
+  },
+
+  {
+    id: "sunset",
+    title: "Sunset Wind-Down",
+    day: "Thu",
+    description: "Warm gradients dim devices ahead of evening routines.",
+  },
+
+  {
+    id: "sunset",
+    title: "Sunset Wind-Down",
+    day: "Thu",
+    description: "Warm gradients dim devices ahead of evening routines.",
   },
 ];
 
-const devices = [
+const devices: DeviceItem[] = [
   {
-    id: "device-1",
-    name: "Living Room Lamp",
-    location: "Living Room",
-    status: "Paired",
+    id: "clock-hall",
+    name: "Atrium Clock",
+    schedules: ["A", "B", "C", "D", "E", "F", "G"],
   },
   {
-    id: "device-2",
-    name: "Smart Thermostat",
-    location: "Hallway",
-    status: "Paired",
+    id: "clock-lab",
+    name: "Lab Clock",
+    schedules: ["A", "B", "C"],
   },
   {
-    id: "device-3",
-    name: "Coffee Maker",
-    location: "Kitchen",
-    status: "Available",
-  },
-  {
-    id: "device-4",
-    name: "Bedroom Speaker",
-    location: "Primary Bedroom",
-    status: "Available",
+    id: "clock-studio",
+    name: "Studio Clock",
+    schedules: ["B", "C", "D", "E"],
   },
 ];
 
 export function DashboardPage() {
-  const { user, logout } = useAuth();
-  const { showToast } = useToast();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    showToast("Signed out successfully.", 3000, "info");
-    navigate("/auth", { replace: true });
-  };
-
   return (
     <main className="dashboard-screen">
-      <header className="dashboard-hero">
+      <header className="dashboard-header">
         <div>
-          <p className="eyebrow">Dashboard</p>
-          <h1>Welcome back, {user?.name ?? "friend"} 👋</h1>
-          <p className="subtitle">
-            Manage schedules, monitor device health, and trigger automations.
+          <p className="eyebrow">Welcome to</p>
+          <h1>Clockwise dashboard</h1>
+          <p className="subtle">
+            Monitor schedules and keep every device in sync.
           </p>
-        </div>
-        <div className="dashboard-hero__actions">
-          <ThemeButton label="Create schedule" />
-          <ThemeButton
-            label="Logout"
-            variant="secondary"
-            onClick={handleLogout}
-          />
         </div>
       </header>
 
       <section className="dashboard-section">
         <div className="section-heading">
-          <div>
-            <h2>Schedules</h2>
-            <p className="section-hint">Manage your daily automations</p>
-          </div>
-          <button type="button" className="ghost-link">
-            View all
-          </button>
+          <h2>Current schedule</h2>
+          <p className="subtle">Tap the + card to create a new schedule</p>
         </div>
         <div className="schedule-grid">
-          {schedules.map((schedule) => (
-            <article key={schedule.id} className="schedule-card">
-              <div>
-                <p className="schedule-days">{schedule.days}</p>
-                <h3>{schedule.title}</h3>
-                <p className="schedule-tasks">{schedule.tasks}</p>
-              </div>
-              <p className="schedule-next">{schedule.nextTrigger}</p>
+          {schedules.map((item) => (
+            <article key={item.id} className="schedule-card">
+              <p className="schedule-day">{item.day}</p>
+              <h3>{item.title}</h3>
+              <p className="schedule-description">{item.description}</p>
             </article>
           ))}
+          <article className="add-schedule-card">+</article>
         </div>
       </section>
 
       <section className="dashboard-section">
         <div className="section-heading">
-          <div>
-            <h2>Devices</h2>
-            <p className="section-hint">Connect via Bluetooth</p>
-          </div>
-          <button type="button" className="ghost-link">
-            Add device
-          </button>
+          <h2>Connected devices</h2>
+          <p className="subtle">Status reflects the last uploaded schedule.</p>
         </div>
-        <div className="device-list">
+        <div className="devices-list">
           {devices.map((device) => (
             <article key={device.id} className="device-card">
-              <div className="device-icon" aria-hidden>
-                <FiWifi />
+              <div>
+                <p className="device-label">Device</p>
+                <h3>{device.name}</h3>
               </div>
-              <div className="device-meta">
-                <p className="device-name">{device.name}</p>
-                <p className="device-location">{device.location}</p>
+              <div className="device-schedules">
+                <p className="device-label">
+                  Schedules: {device.schedules.join(", ")}
+                </p>
               </div>
-              <span
-                className={`status-chip ${
-                  device.status === "Paired"
-                    ? "status-chip--paired"
-                    : "status-chip--available"
-                }`}
-              >
-                {device.status}
-              </span>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="dashboard-section assign-section">
+        <div className="assign-content">
+          <div>
+            <h2>Add schedules to devices</h2>
+            <p className="subtle">
+              Select a device and upload a schedule bundle to push the latest
+              automation.
+            </p>
+          </div>
+          <button type="button" className="assign-button">
+            Add schedule to device
+          </button>
         </div>
       </section>
     </main>
