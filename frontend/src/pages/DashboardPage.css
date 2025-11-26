@@ -1,0 +1,194 @@
+.dashboard-screen {
+  min-height: 100vh;
+  background: linear-gradient(
+    180deg,
+    var(--color-surface-alt) 0%,
+    var(--color-surface-alt-2) 35%,
+    var(--color-surface-muted) 100%
+  );
+  padding: var(--space-4xl) max(5vw, var(--space-xl)) var(--space-3xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);
+}
+
+.dashboard-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  align-items: flex-start;
+}
+
+.dashboard-hero h1 {
+  font-size: var(--heading-h1);
+  margin: var(--space-0-35) 0;
+  color: var(--color-primary);
+}
+
+.dashboard-hero .subtitle {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  font-size: var(--text-xs);
+  color: var(--color-brand);
+  margin: 0;
+}
+
+.dashboard-hero__actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.dashboard-section {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-xxl);
+  padding: var(--space-2xl);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: var(--heading-h2);
+  color: var(--color-primary);
+}
+
+.section-hint {
+  margin: var(--space-0-35) 0 0;
+  color: var(--color-muted-soft);
+}
+
+.ghost-link {
+  border: none;
+  background: transparent;
+  color: var(--color-brand);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-md-plus);
+}
+
+.schedule-card {
+  border-radius: var(--radius-card);
+  padding: var(--space-lg);
+  background: var(--color-surface-soft);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.schedule-card h3 {
+  margin: var(--space-0-35) 0 0;
+  font-size: var(--text-card-title);
+}
+
+.schedule-days {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-medium);
+  font-size: var(--text-caption);
+  color: var(--color-brand);
+}
+
+.schedule-tasks {
+  margin: 0;
+  color: var(--color-muted-strong);
+  line-height: 1.4;
+}
+
+.schedule-next {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.device-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.device-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md-plus);
+  padding: var(--space-md) var(--space-md-plus);
+  border-radius: var(--radius-xl);
+  background-color: var(--color-surface-muted);
+  box-shadow: var(--shadow-md);
+}
+
+.device-icon {
+  width: var(--icon-size-lg);
+  height: var(--icon-size-lg);
+  border-radius: 50%;
+  background-color: var(--color-device-icon-bg);
+  display: grid;
+  place-items: center;
+  color: var(--color-device-icon-ink);
+  font-size: var(--text-lg);
+}
+
+.device-meta {
+  flex: 1;
+}
+
+.device-name {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.device-location {
+  margin: var(--space-0-35) 0 0;
+  color: var(--color-muted-soft);
+  font-size: var(--text-sm-plus);
+}
+
+.status-chip {
+  border-radius: var(--radius-pill);
+  padding: var(--space-0-45) var(--space-1-2);
+  font-size: var(--text-xxs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-chip);
+}
+
+.status-chip--paired {
+  background-color: var(--color-status-paired-bg);
+  color: var(--color-status-paired);
+}
+
+.status-chip--available {
+  background-color: var(--color-status-available-bg);
+  color: var(--color-status-available);
+}
+
+@media (max-width: 768px) {
+  .dashboard-hero {
+    flex-direction: column;
+  }
+
+  .dashboard-section {
+    padding: var(--space-lg-plus);
+  }
+}
