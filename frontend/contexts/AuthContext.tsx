@@ -25,12 +25,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login: AuthContextValue["login"] = (userData) => {
     setUser(userData);
-    router.replace("/");
   };
 
   const logout: AuthContextValue["logout"] = () => {
     setUser(null);
-    router.replace("/auth/signin");
   };
 
   const value = useMemo<AuthContextValue>(

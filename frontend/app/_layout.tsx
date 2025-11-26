@@ -1,9 +1,12 @@
 import { Toast } from "@/components/Toast";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ToastProvider } from "@/contexts/ToastContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Stack } from "expo-router";
 
 export default function RootLayout() {
+  const { user } = useAuth();
+
   return (
     <AuthProvider>
       <ToastProvider>
@@ -12,13 +15,24 @@ export default function RootLayout() {
           <Stack.Screen
             name="index"
             options={{
-              headerTitle: "Dashboard",
+              headerShown: false,
+              animation: "none",
             }}
           />
           <Stack.Screen
-            name="auth/signin"
+            name="/dashboard"
+            options={{
+              headerTitle: "Dashboard",
+              headerShown: false,
+              animation: "none",
+            }}
+          />
+          <Stack.Screen
+            name="/signin"
             options={{
               headerTitle: "Sign In",
+              headerShown: false,
+              animation: "none",
             }}
           />
         </Stack>
