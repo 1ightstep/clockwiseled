@@ -1,6 +1,6 @@
 import { ScheduleEditor } from "@/components/ScheduleEditor";
 import { type ScheduleData } from "@/shared/types";
-import { Pen, X } from "lucide-react";
+import { Eye, Hammer, Pen, Upload, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import "./DashboardPage.css";
 
@@ -48,24 +48,23 @@ export function DashboardPage() {
   };
 
   useEffect(() => {
-    window.serial.getDevices().then((devices: DeviceItem[]) => {
-      const formattedDevices = devices.map((device) => {
-        if (device.manufacturer?.toLowerCase() === "wch.cn") {
-          return { ...device, manufacturer: "Clockwise Device :)" };
-        }
-        return device;
+    const intervalId = setInterval(async () => {
+      window.serial.getDevices().then((devices: DeviceItem[]) => {
+        const formattedDevices = devices.map((device) => {
+          if (device.manufacturer?.toLowerCase() === "wch.cn") {
+            return { ...device, manufacturer: "Clockwise Device :)" };
+          }
+          return device;
+        });
+        console.log(formattedDevices);
+        setDevices(formattedDevices);
       });
+    }, 1000);
 
-      setDevices(formattedDevices);
-    });
-
-    const handleData = (data: string) => {
-      console.log(data);
-    };
-
-    window.serial.onData(handleData);
     window.serial.write("ON 255 0 0\n");
-    return () => {};
+    return () => {
+      clearInterval(intervalId);
+    };
   }, []);
 
   return (
@@ -130,7 +129,7 @@ export function DashboardPage() {
           <p className="subtle">Status reflects the last uploaded schedule.</p>
         </div>
         <div className="devices-list">
-          {devices ? (
+          {devices?.length ? (
             devices.map((device, index) => (
               <article key={index} className="device-card">
                 <div>
@@ -139,8 +138,16 @@ export function DashboardPage() {
                   <p className="device-meta">SN: {device.serialNumber}</p>
                   <p className="device-meta">Port: {device.path}</p>
                 </div>
-                <div className="device-schedules">
-                  <p className="device-label">Schedules: A B C D E</p>
+                <div className="device-btn-container">
+                  <button className="device-btn">
+                    <Upload />
+                  </button>
+                  <button className="device-btn">
+                    <Eye />
+                  </button>
+                  <button className="device-btn">
+                    <Hammer />
+                  </button>
                 </div>
               </article>
             ))
