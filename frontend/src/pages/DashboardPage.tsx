@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import "./DashboardPage.css";
 
 type ScheduleItem = {
@@ -8,39 +9,29 @@ type ScheduleItem = {
 };
 
 type DeviceItem = {
-  id: string;
-  name: string;
-  schedules: string[];
+  path: string;
+  serialNumber?: string;
+  manufacturer?: string;
 };
 
-const schedules: ScheduleItem[] = [
-  {
-    id: "A",
-    title: "Long Day",
-    day: "Mon, Fri",
-    description: "Long day, no ET",
-  },
-];
-
-const devices: DeviceItem[] = [
-  {
-    id: "clock-hall",
-    name: "Atrium Clock",
-    schedules: ["A", "B", "C", "D", "E", "F", "G"],
-  },
-  {
-    id: "clock-lab",
-    name: "Lab Clock",
-    schedules: ["A", "B", "C"],
-  },
-  {
-    id: "clock-studio",
-    name: "Studio Clock",
-    schedules: ["B", "C", "D", "E"],
-  },
-];
-
 export function DashboardPage() {
+  const [devices, setDevices] = useState<DeviceItem[] | null>(null);
+  const [schedules, setSchedules] = useState<ScheduleItem[] | null>(null);
+
+  useEffect(() => {
+    window.serial.getDevices().then((devices: DeviceItem[]) => {
+      setDevices(devices);
+    });
+
+    const handleData = (data: string) => {
+      console.log(data)
+    }
+
+    window.serial.onData(handleData)
+    window.serial.write('ON 255 0 0\n')
+    return () => { }
+  }, [])
+
   return (
     <main className="dashboard-screen">
       <header className="dashboard-header">
@@ -59,7 +50,7 @@ export function DashboardPage() {
           <p className="subtle">Tap the + card to create a new schedule</p>
         </div>
         <div className="schedule-grid">
-          {schedules.map((item) => (
+          {schedules && schedules.map((item: ScheduleItem) => (
             <article key={item.id} className="schedule-card">
               <p className="schedule-day">{item.day}</p>
               <h3>{item.title}</h3>
@@ -76,19 +67,28 @@ export function DashboardPage() {
           <p className="subtle">Status reflects the last uploaded schedule.</p>
         </div>
         <div className="devices-list">
-          {devices.map((device) => (
-            <article key={device.id} className="device-card">
+          {devices ? devices.map((device, index) => (
+            <article key={index} className="device-card">
               <div>
                 <p className="device-label">Device</p>
-                <h3>{device.name}</h3>
+                <h3>{device.manufacturer}</h3>
+                <p className="device-meta">
+                  SN: {device.serialNumber}
+                </p>
+                <p className="device-meta">
+                  Port: {device.path}
+                </p>
               </div>
               <div className="device-schedules">
                 <p className="device-label">
-                  Schedules: {device.schedules.join(", ")}
+                  Schedules: A B C D E
                 </p>
               </div>
             </article>
-          ))}
+          )) :
+            <div>
+              No devices connected
+            </div>}
         </div>
       </section>
     </main>

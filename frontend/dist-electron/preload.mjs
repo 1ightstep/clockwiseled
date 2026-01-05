@@ -18,3 +18,14 @@ electron.contextBridge.exposeInMainWorld("ipcRenderer", {
     return electron.ipcRenderer.invoke(channel, ...omit);
   }
 });
+electron.contextBridge.exposeInMainWorld("serial", {
+  write: (data) => electron.ipcRenderer.send("serial-write", data),
+  onData: (callback) => {
+    const listener = (_event, data) => callback(data);
+    electron.ipcRenderer.on("serial-data", listener);
+    return () => {
+      electron.ipcRenderer.removeListener("serial-data", listener);
+    };
+  },
+  getDevices: () => electron.ipcRenderer.invoke("serial-devices")
+});
