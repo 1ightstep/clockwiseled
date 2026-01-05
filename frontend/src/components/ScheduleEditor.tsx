@@ -1,6 +1,7 @@
 import { useToast } from "@/hooks/useToast";
 import { type EventItem, type ScheduleData } from "@/shared/types";
 import getScheduleValidation from "@/utils/getScheduleValidation";
+import { X } from "lucide-react";
 import { useState } from "react";
 import "./ScheduleEditor.css";
 
@@ -92,6 +93,9 @@ export function ScheduleEditor({
   return (
     <div className="editor-fixed-overlay">
       <div className="schedule-container">
+        <button className="exit-btn" onClick={onClose}>
+          <X />
+        </button>
         <aside className="editor-sidebar">
           <div className="sidebar-header">
             <h3>{isEditMode ? "Edit Schedule" : "New Schedule"}</h3>
@@ -134,11 +138,6 @@ export function ScheduleEditor({
             <button className="btn-save" onClick={handleSave}>
               Save Changes
             </button>
-            {onClose && (
-              <button className="btn-cancel" onClick={onClose}>
-                Cancel
-              </button>
-            )}
           </div>
         </aside>
 
@@ -238,11 +237,11 @@ export function ScheduleEditor({
                   </div>
 
                   <button
-                    className="btn-delete-event"
+                    className="ev-delete-btn"
                     onClick={() => removeEvent(ev.id)}
                     title="Delete Event"
                   >
-                    Delete
+                    <X />
                   </button>
                 </div>
               </div>

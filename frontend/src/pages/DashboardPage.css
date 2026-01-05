@@ -50,6 +50,7 @@
 
 .schedule-card,
 .add-schedule-card {
+  position: relative;
   background-color: var(--color-background);
   border-radius: var(--radius-xl);
   padding: var(--space-lg);
@@ -84,6 +85,27 @@
   font-size: var(--text-2xl);
   font-weight: 300;
   cursor: pointer;
+}
+
+.del-schedule-btn {
+  top: 0;
+  right: 0;
+  position: absolute;
+  background: transparent;
+  border: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: var(--space-xs);
+  border-radius: 100%;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+}
+
+.del-schedule-btn:hover {
+  transform: scale(1.1);
 }
 
 .devices-list {

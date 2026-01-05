@@ -1,5 +1,6 @@
 import { ScheduleEditor } from "@/components/ScheduleEditor";
 import { type ScheduleData } from "@/shared/types";
+import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import "./DashboardPage.css";
 
@@ -28,6 +29,16 @@ export function DashboardPage() {
     setShowEditor(!showEditor);
   };
 
+  const handleOnClose = () => {
+    setShowEditor(!showEditor);
+  };
+
+  const handleScheduleDelete = (id: ScheduleData["id"]) => {
+    if (!schedules) return;
+    const newSchedules: ScheduleData[] = schedules.filter((s) => s.id !== id);
+    setSchedules(newSchedules);
+  };
+
   useEffect(() => {
     window.serial.getDevices().then((devices: DeviceItem[]) => {
       const formattedDevices = devices.map((device) => {
@@ -51,7 +62,9 @@ export function DashboardPage() {
 
   return (
     <main className="dashboard-screen">
-      {showEditor && <ScheduleEditor onSave={handleOnSave} />}
+      {showEditor && (
+        <ScheduleEditor onSave={handleOnSave} onClose={handleOnClose} />
+      )}
       <header className="dashboard-header">
         <div>
           <p className="eyebrow">Welcome to</p>
@@ -74,7 +87,12 @@ export function DashboardPage() {
                 <p className="schedule-day">{item.day}</p>
                 <h3>{item.title}</h3>
                 <p className="schedule-description">{item.description}</p>
-                <button className="del-schedule-btn"></button>
+                <button
+                  className="del-schedule-btn"
+                  onClick={() => handleScheduleDelete(item.id)}
+                >
+                  <X />
+                </button>
               </article>
             ))}
           <article
