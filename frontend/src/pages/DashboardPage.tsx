@@ -1,6 +1,6 @@
 import { ScheduleEditor } from "@/components/ScheduleEditor";
 import { type ScheduleData } from "@/shared/types";
-import { X } from "lucide-react";
+import { Pen, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import "./DashboardPage.css";
 
@@ -14,6 +14,7 @@ export function DashboardPage() {
   const [devices, setDevices] = useState<DeviceItem[] | null>(null);
   const [schedules, setSchedules] = useState<ScheduleData[] | null>(null);
   const [showEditor, setShowEditor] = useState<boolean>(false);
+  const [scheduleData, setScheduleData] = useState<ScheduleData | undefined>();
 
   const handleOnSave = (schedule: ScheduleData, isEditMode: boolean) => {
     if (isEditMode && schedules) {
@@ -22,6 +23,8 @@ export function DashboardPage() {
         return s;
       });
       setSchedules(newSchedules);
+      setScheduleData(undefined);
+      setShowEditor(!showEditor);
       return;
     }
 
@@ -37,6 +40,11 @@ export function DashboardPage() {
     if (!schedules) return;
     const newSchedules: ScheduleData[] = schedules.filter((s) => s.id !== id);
     setSchedules(newSchedules);
+  };
+
+  const handleEditSchedule = (schedule: ScheduleData) => {
+    setScheduleData(schedule);
+    setShowEditor(true);
   };
 
   useEffect(() => {
@@ -63,7 +71,11 @@ export function DashboardPage() {
   return (
     <main className="dashboard-screen">
       {showEditor && (
-        <ScheduleEditor onSave={handleOnSave} onClose={handleOnClose} />
+        <ScheduleEditor
+          onSave={handleOnSave}
+          onClose={handleOnClose}
+          initialData={scheduleData}
+        />
       )}
       <header className="dashboard-header">
         <div>
@@ -87,12 +99,20 @@ export function DashboardPage() {
                 <p className="schedule-day">{item.day}</p>
                 <h3>{item.title}</h3>
                 <p className="schedule-description">{item.description}</p>
-                <button
-                  className="del-schedule-btn"
-                  onClick={() => handleScheduleDelete(item.id)}
-                >
-                  <X />
-                </button>
+                <div className="schedule-btn-container">
+                  <button
+                    className="edit-schedule-btn"
+                    onClick={() => handleEditSchedule(item)}
+                  >
+                    <Pen size="1.2rem" />
+                  </button>
+                  <button
+                    className="del-schedule-btn"
+                    onClick={() => handleScheduleDelete(item.id)}
+                  >
+                    <X size="1.5rem" />
+                  </button>
+                </div>
               </article>
             ))}
           <article

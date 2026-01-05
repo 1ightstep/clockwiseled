@@ -60,13 +60,15 @@
   flex-direction: column;
   gap: var(--space-xs);
   min-width: 18rem;
-  transition: transform 0.2s;
   cursor: pointer;
 }
 
-.schedule-card:hover,
+.add-schedule-card {
+  transition: transform 0.2s;
+}
+
 .add-schedule-card:hover {
-  transform: scale(1.03);
+  transform: scale(1.01);
 }
 
 .schedule-day {
@@ -91,13 +93,18 @@
   align-items: center;
   font-size: var(--text-2xl);
   font-weight: 300;
-  cursor: pointer;
 }
 
-.del-schedule-btn {
+.schedule-btn-container {
   top: 0;
   right: 0;
   position: absolute;
+  display: flex;
+  justify-content: center;
+}
+
+.del-schedule-btn,
+.edit-schedule-btn {
   background: transparent;
   border: none;
   color: var(--color-primary);
@@ -111,8 +118,16 @@
   transition: transform 0.2s;
 }
 
+.edit-schedule-btn {
+  transition: transform 0.5s;
+}
+
 .del-schedule-btn:hover {
   transform: scale(1.1);
+}
+
+.edit-schedule-btn:hover {
+  transform: rotate(360deg);
 }
 
 .devices-list {
