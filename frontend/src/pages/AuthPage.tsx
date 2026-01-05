@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
 import { useGoogleLogin, type TokenResponse } from "@react-oauth/google";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { FaGoogle } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import "./AuthPage.css";
@@ -10,6 +10,34 @@ export function AuthPage() {
   const { login, user } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
+
+  const [loginStage, setLoginStage] = useState<"email" | "password">("email");
+  const [email, setEmail] = useState<string | null>(null);
+  const [password, setPassword] = useState<string | null>(null);
+
+  const handleFormSubmit = () => {
+    if (loginStage === "email") {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const isValidEmail = email ? emailRegex.test(email) : false;
+
+      if (!email && !isValidEmail) {
+        showToast("Please enter a valid email address.", 3000, "error");
+        console.log("hello world");
+        return;
+      }
+
+      setLoginStage("password");
+      return;
+    }
+    else if (loginStage == "password") {
+      if (!password) {
+        console.log("hello worlda");
+        showToast("Please enter a password.", 3000, "error");
+        return;
+      }
+      return;
+    }
+  }
 
   const googleLogin = useGoogleLogin({
     onSuccess: (tokenResponse) => handleGoogleSuccess(tokenResponse),
@@ -55,12 +83,20 @@ export function AuthPage() {
     <main className="auth-screen">
       <section className="auth-panel">
         <h2>Log in with</h2>
-        <form className="auth-form">
-          <input className="auth-field" type="email" placeholder="Email" />
-          <button className="auth-submit" type="button">
-            Continue
-          </button>
-        </form>
+        {
+          loginStage === "email" ? <form className="auth-form">
+            <input className="auth-field" type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
+            <button className="auth-submit" type="button" onClick={handleFormSubmit}>
+              Continue
+            </button>
+          </form> : <form className="auth-form">
+            <input className="auth-field" type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+            <button className="auth-submit" type="button" onClick={handleFormSubmit}>
+              Login
+            </button>
+          </form>
+        }
+
         <div className="auth-divider">
           <span />
           <p>or</p>
@@ -75,6 +111,9 @@ export function AuthPage() {
             <FaGoogle />
             <span>Sign in with Google</span>
           </button>
+        </div>
+        <div>
+          <a className="auth-create-account">No account?</a>
         </div>
       </section>
     </main>

@@ -40,6 +40,7 @@
   font-size: var(--text-md);
   opacity: 0.7;
   cursor: pointer;
+  transition: transform 0.2s;
 }
 
 .auth-divider {
@@ -68,6 +69,21 @@
   background-color: var(--color-background);
   color: var(--color-primary);
   cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.auth-google-button:hover,
+.auth-submit:hover {
+  transform: scale(1.02);
+}
+
+.auth-create-account {
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.auth-create-account:hover {
+  color: var(--color-brand);
 }
 
 @media (max-width: 640px) {

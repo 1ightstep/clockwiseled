@@ -15,49 +15,10 @@ type DeviceItem = {
 
 const schedules: ScheduleItem[] = [
   {
-    id: "wake",
-    title: "Wake Up Sync",
-    day: "Mon",
-    description: "Lights fade up with sunrise tones to ease into the day.",
-  },
-  {
-    id: "focus",
-    title: "Deep Focus",
-    day: "Tue",
-    description: "Muted palette keeps the studio calm during core hours.",
-  },
-  {
-    id: "stretch",
-    title: "Midweek Stretch",
-    day: "Wed",
-    description: "Gentle cues remind the team to pause, move, and reset.",
-  },
-  {
-    id: "sunset",
-    title: "Sunset Wind-Down",
-    day: "Thu",
-    description: "Warm gradients dim devices ahead of evening routines.",
-  },
-
-  {
-    id: "sunset",
-    title: "Sunset Wind-Down",
-    day: "Thu",
-    description: "Warm gradients dim devices ahead of evening routines.",
-  },
-
-  {
-    id: "sunset",
-    title: "Sunset Wind-Down",
-    day: "Thu",
-    description: "Warm gradients dim devices ahead of evening routines.",
-  },
-
-  {
-    id: "sunset",
-    title: "Sunset Wind-Down",
-    day: "Thu",
-    description: "Warm gradients dim devices ahead of evening routines.",
+    id: "A",
+    title: "Long Day",
+    day: "Mon, Fri",
+    description: "Long day, no ET",
   },
 ];
 
@@ -128,21 +89,6 @@ export function DashboardPage() {
               </div>
             </article>
           ))}
-        </div>
-      </section>
-
-      <section className="dashboard-section assign-section">
-        <div className="assign-content">
-          <div>
-            <h2>Add schedules to devices</h2>
-            <p className="subtle">
-              Select a device and upload a schedule bundle to push the latest
-              automation.
-            </p>
-          </div>
-          <button type="button" className="assign-button">
-            Add schedule to device
-          </button>
         </div>
       </section>
     </main>
