@@ -1,32 +1,41 @@
 import { ScheduleData } from "@/shared/types";
 
-export default function getScheduleValidation(schedule: ScheduleData) {
+export type ValidationResult = {
+  valid: boolean;
+  reason?: string;
+};
+
+export function getScheduleValidation(
+  schedule: ScheduleData
+): ValidationResult {
+  // basic checks
   if (!schedule.title?.trim())
     return { valid: false, reason: "Title is required" };
   if (!schedule.day) return { valid: false, reason: "Please select a day" };
+
+  // event count check
   if (!schedule.events || schedule.events.length === 0) {
     return { valid: false, reason: "Schedule must have at least one event" };
   }
 
-  for (const [index, event] of schedule.events.entries()) {
-    const { startH, startM, endH, endM, r, g, b } = event;
-    const eventNum = index + 1;
+  // sort for overlap check
+  const sorted = [...schedule.events].sort(
+    (a, b) => a.startH * 60 + a.startM - (b.startH * 60 + b.startM)
+  );
 
-    const colors = { r, g, b };
-    for (const [key, val] of Object.entries(colors)) {
-      if (val < 0 || val > 255)
-        return {
-          valid: false,
-          reason: `Event ${eventNum}: ${key.toUpperCase()} must be 0-255`,
-        };
+  for (let i = 0; i < sorted.length; i++) {
+    const event = sorted[i];
+    const { startH, startM, endH, endM, r, g, b } = event;
+    const eventNum = i + 1;
+
+    // rgb check
+    if ([r, g, b].some((v) => v < 0 || v > 255)) {
+      return { valid: false, reason: `Event ${eventNum}: RGB must be 0-255` };
     }
 
     // range checks
     if (startH < 0 || startH > 23 || endH < 0 || endH > 23) {
-      return {
-        valid: false,
-        reason: `Event ${eventNum}: Hours must be 0-23`,
-      };
+      return { valid: false, reason: `Event ${eventNum}: Hours must be 0-23` };
     }
     if (startM < 0 || startM > 59 || endM < 0 || endM > 59) {
       return {
@@ -41,8 +50,19 @@ export default function getScheduleValidation(schedule: ScheduleData) {
     if (endTotal <= startTotal) {
       return {
         valid: false,
-        reason: `Event ${eventNum}: End time must be after start time`,
+        reason: `Event ${eventNum}: End must be after start`,
       };
+    }
+
+    // overlap check
+    if (i < sorted.length - 1) {
+      const nextStart = sorted[i + 1].startH * 60 + sorted[i + 1].startM;
+      if (endTotal > nextStart) {
+        return {
+          valid: false,
+          reason: `Event ${eventNum} overlaps with next event`,
+        };
+      }
     }
   }
 

@@ -1,6 +1,9 @@
 import { useToast } from "@/hooks/useToast";
 import { type EventItem, type ScheduleData } from "@/shared/types";
-import getScheduleValidation from "@/utils/getScheduleValidation";
+import {
+  type ValidationResult,
+  getScheduleValidation,
+} from "@/utils/getScheduleValidation";
 import { X } from "lucide-react";
 import { useState } from "react";
 import "./ScheduleEditor.css";
@@ -72,7 +75,7 @@ export function ScheduleEditor({
       day,
       events,
     };
-    const isValidData = getScheduleValidation(schedule);
+    const isValidData: ValidationResult = getScheduleValidation(schedule);
 
     if (!isValidData.valid && isValidData.reason) {
       showToast(isValidData.reason, 3000, "error");
