@@ -59,7 +59,7 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
         <div className="sync-header">
           <div>
             <h2 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <UploadCloud size={24} /> Device Sync
+              <UploadCloud size={24} color="var(--color-brand)" /> Device Sync
             </h2>
             <p style={{ fontSize: "var(--text-sm)", opacity: 0.6 }}>
               Assign a schedule to each day of the week.

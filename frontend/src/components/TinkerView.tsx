@@ -65,7 +65,7 @@ export function TinkerView({
   return (
     <div className="tinker-fixed-overlay">
       <div className="tinker-container">
-        <button className="tinker-exit-btn" onClick={onClose}>
+        <button className="exit-btn" onClick={onClose}>
           <X size={20} />
         </button>
 

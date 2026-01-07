@@ -25,8 +25,8 @@
 }
 
 .exit-btn {
-  top: 0;
-  right: 0;
+  top: 1rem;
+  right: 1rem;
   position: absolute;
   background: transparent;
   border: none;
@@ -34,10 +34,17 @@
   cursor: pointer;
   padding: var(--space-xs);
   border-radius: 100%;
-  transition: background 0.2s;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0.9;
+}
+
+.exit-btn:hover {
+  opacity: 1;
+  background-color: var(--color-secondary);
+  transform: rotate(180deg);
 }
 
 .editor-sidebar {

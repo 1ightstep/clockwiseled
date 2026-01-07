@@ -1,4 +1,5 @@
 import { ScheduleEditor } from "@/components/ScheduleEditor";
+import { ScheduleView } from "@/components/ScheduleView";
 import { SyncEditor } from "@/components/SyncEditor";
 import { TinkerView } from "@/components/TinkerView";
 import { type ScheduleData } from "@/shared/types";
@@ -23,6 +24,7 @@ export function DashboardPage() {
   const [showEditor, setShowEditor] = useState<boolean>(false);
   const [showTinkerView, setShowTinkerView] = useState<boolean>(false);
   const [showSyncEditor, setShowSyncEditor] = useState<boolean>(false);
+  const [showScheduleView, setShowScheduleView] = useState<boolean>(false);
   const [scheduleData, setScheduleData] = useState<ScheduleData | undefined>();
 
   const handleOnScheduleSave = (
@@ -102,6 +104,13 @@ export function DashboardPage() {
         />
       )}
 
+      {showScheduleView && currDevice && (
+        <ScheduleView
+          port={currDevice.path}
+          onClose={() => setShowScheduleView(false)}
+        />
+      )}
+
       <header className="dashboard-header">
         <div>
           <p className="eyebrow">Welcome to</p>
@@ -167,7 +176,7 @@ export function DashboardPage() {
                 <div className="device-btn-container">
                   <button
                     className="device-btn"
-                    onClick={() => setShowSyncEditor(true)}
+                    onClick={() => setShowScheduleView(true)}
                   >
                     <UploadCloud />
                   </button>
