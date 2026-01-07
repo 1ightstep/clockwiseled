@@ -35,6 +35,7 @@ ipcMain.on("serial-write", (_, data: string) => {
 
   currentPort.write(Buffer.from(data + "\n", "ascii"), (err: Error) => {
     if (err) console.error("Serial write error:", err.message);
+    currentPort.close();
   });
 });
 

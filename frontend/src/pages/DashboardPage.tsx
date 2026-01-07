@@ -61,6 +61,7 @@ export function DashboardPage() {
 
   useEffect(() => {
     const intervalId = setInterval(async () => {
+      if (showTinkerView) return;
       window.serial.getDevices().then((devices: DeviceItem[]) => {
         const formattedDevices = devices.map((device) => {
           if (device.manufacturer?.toLowerCase() === "wch.cn") {
@@ -176,13 +177,16 @@ export function DashboardPage() {
                 <div className="device-btn-container">
                   <button
                     className="device-btn"
-                    onClick={() => setShowScheduleView(true)}
+                    onClick={() => setShowSyncEditor(true)}
                   >
                     <UploadCloud />
                   </button>
                   <button
                     className="device-btn"
-                    onClick={() => setShowSyncEditor(true)}
+                    onClick={() => {
+                      setCurrDevice(device);
+                      setShowScheduleView(true);
+                    }}
                   >
                     <Eye />
                   </button>

@@ -1,6 +1,6 @@
 import { type EventItem, type ScheduleData } from "@/shared/types";
 import { Calendar, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import "./ScheduleView.css";
 
 type ScheduleViewProps = {
@@ -31,18 +31,6 @@ export function ScheduleView({ port, onClose }: ScheduleViewProps) {
     await sleep(1500);
     window.serial.write(data);
   };
-
-  useEffect(() => {
-    connectAndWrite(port, "GET_ALL_SCHEDULES");
-
-    const unsubscribe = window.serial.onData((data) => {
-      console.log("Serial received:", data);
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
 
   return (
     <div className="view-fixed-overlay">
