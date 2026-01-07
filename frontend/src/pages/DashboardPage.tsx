@@ -2,7 +2,7 @@ import { ScheduleEditor } from "@/components/ScheduleEditor";
 import { SyncEditor } from "@/components/SyncEditor";
 import { TinkerView } from "@/components/TinkerView";
 import { type ScheduleData } from "@/shared/types";
-import { Eye, Hammer, Pen, Upload, X } from "lucide-react";
+import { Eye, Pen, Terminal, UploadCloud, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import "./DashboardPage.css";
 
@@ -14,6 +14,9 @@ type DeviceItem = {
 
 export function DashboardPage() {
   const [devices, setDevices] = useState<DeviceItem[] | undefined>(undefined);
+  const [currDevice, setCurrDevice] = useState<DeviceItem | undefined>(
+    undefined
+  );
   const [schedules, setSchedules] = useState<ScheduleData[] | undefined>(
     undefined
   );
@@ -92,8 +95,11 @@ export function DashboardPage() {
         />
       )}
 
-      {showTinkerView && (
-        <TinkerView port="COM5" onClose={() => setShowTinkerView(false)} />
+      {showTinkerView && currDevice && (
+        <TinkerView
+          port={currDevice.path}
+          onClose={() => setShowTinkerView(false)}
+        />
       )}
 
       <header className="dashboard-header">
@@ -161,9 +167,9 @@ export function DashboardPage() {
                 <div className="device-btn-container">
                   <button
                     className="device-btn"
-                    onClick={() => setShowEditor(true)}
+                    onClick={() => setShowSyncEditor(true)}
                   >
-                    <Upload />
+                    <UploadCloud />
                   </button>
                   <button
                     className="device-btn"
@@ -173,9 +179,12 @@ export function DashboardPage() {
                   </button>
                   <button
                     className="device-btn"
-                    onClick={() => setShowTinkerView(true)}
+                    onClick={() => {
+                      setCurrDevice(device);
+                      setShowTinkerView(true);
+                    }}
                   >
-                    <Hammer />
+                    <Terminal />
                   </button>
                 </div>
               </article>

@@ -1,10 +1,10 @@
 import { useToast } from "@/hooks/useToast";
 import { type ScheduleData } from "@/shared/types";
-import { Calendar, UploadCloud, X } from "lucide-react";
+import { UploadCloud, X } from "lucide-react";
 import { useState } from "react";
 import "./SyncEditor.css";
 
-type DeviceUploaderProps = {
+type DeviceSyncProps = {
   schedules: ScheduleData[] | undefined;
   onSync: (assignment: Record<string, ScheduleData>) => void;
   onClose: () => void;
@@ -20,11 +20,7 @@ const DAYS = [
   "Saturday",
 ];
 
-export function SyncEditor({
-  schedules,
-  onSync,
-  onClose,
-}: DeviceUploaderProps) {
+export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
   const { showToast } = useToast();
   const [assignments, setAssignments] = useState<Record<string, string>>({});
 
@@ -54,16 +50,16 @@ export function SyncEditor({
   };
 
   return (
-    <div className="uploader-fixed-overlay">
-      <div className="uploader-container">
+    <div className="sync-fixed-overlay">
+      <div className="sync-container">
         <button className="exit-btn" onClick={onClose}>
           <X size={20} />
         </button>
 
-        <div className="uploader-header">
+        <div className="sync-header">
           <div>
             <h2 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <Calendar size={24} /> Device Sync
+              <UploadCloud size={24} /> Device Sync
             </h2>
             <p style={{ fontSize: "var(--text-sm)", opacity: 0.6 }}>
               Assign a schedule to each day of the week.
@@ -90,7 +86,7 @@ export function SyncEditor({
                   value={selectedId}
                   onChange={(e) => handleSelect(day, e.target.value)}
                 >
-                  <option value="">No Task</option>
+                  <option value="">None</option>
                   {schedules?.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.title}
@@ -118,9 +114,9 @@ export function SyncEditor({
           })}
         </div>
 
-        <footer className="upload-footer">
+        <footer className="sync-footer">
           <button
-            className="btn-save"
+            className="btn-sync"
             style={{ background: "transparent", color: "var(--color-primary)" }}
             onClick={onClose}
           >
@@ -128,11 +124,12 @@ export function SyncEditor({
           </button>
 
           <button
-            className="btn-save"
+            className="btn-sync"
             onClick={validateAndUpload}
             style={{ display: "flex", alignItems: "center", gap: "8px" }}
           >
-            <UploadCloud size={18} /> Sync to Device
+            <UploadCloud size={18} />
+            Sync
           </button>
         </footer>
       </div>

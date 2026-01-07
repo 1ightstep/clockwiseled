@@ -166,12 +166,17 @@ export function TinkerView({
           </div>
         </div>
 
-        <footer className="tinker-footer">
-          <button className="btn-tinker-cancel" onClick={onClose}>
+        <footer className="tinker-footer ">
+          <button
+            className="btn-tinker-execute"
+            onClick={onClose}
+            style={{ background: "transparent", color: "var(--color-primary)" }}
+          >
             Cancel
           </button>
           <button
             className="btn-tinker-execute btn-execute-glow"
+            style={{ display: "flex", alignItems: "center", gap: "8px" }}
             onClick={() => handleSend()}
           >
             <Send size={18} /> Execute
