@@ -49,9 +49,17 @@ export function TinkerView({
     return "";
   };
 
-  const handleSend = (overrideCmd?: string) => {
+  const handleExecute = (overrideCmd?: string) => {
     const finalString = overrideCmd || formatCommand();
-    console.log(finalString);
+
+    const sleep = (ms: number) =>
+      new Promise<void>((resolve) => setTimeout(resolve, ms));
+    const connectAndWrite = async (port: string, data: string) => {
+      window.serial.connectDevice(port);
+      await sleep(1500);
+      window.serial.write(data);
+    };
+    connectAndWrite(port, finalString);
   };
 
   return (
@@ -177,7 +185,7 @@ export function TinkerView({
           <button
             className="btn-tinker-execute btn-execute-glow"
             style={{ display: "flex", alignItems: "center", gap: "8px" }}
-            onClick={() => handleSend()}
+            onClick={() => handleExecute()}
           >
             <Send size={18} /> Execute
           </button>

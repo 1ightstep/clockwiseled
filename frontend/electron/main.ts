@@ -52,7 +52,7 @@ ipcMain.handle("serial-devices", async (): Promise<DeviceType[]> => {
   return devices;
 });
 
-ipcMain.on("serial-connect", (_, portPath: string) => {
+ipcMain.on("serial-connect", async (_, portPath: string) => {
   if (currentPort && currentPort.isOpen) {
     currentPort.close();
   }

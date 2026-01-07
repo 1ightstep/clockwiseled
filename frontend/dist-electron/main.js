@@ -38,7 +38,7 @@ ipcMain.handle("serial-devices", async () => {
   );
   return devices;
 });
-ipcMain.on("serial-connect", (_, portPath) => {
+ipcMain.on("serial-connect", async (_, portPath) => {
   if (currentPort && currentPort.isOpen) {
     currentPort.close();
   }
