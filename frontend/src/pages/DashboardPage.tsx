@@ -1,4 +1,6 @@
 import { ScheduleEditor } from "@/components/ScheduleEditor";
+import { SyncEditor } from "@/components/SyncEditor";
+import { TinkerView } from "@/components/TinkerView";
 import { type ScheduleData } from "@/shared/types";
 import { Eye, Hammer, Pen, Upload, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -11,12 +13,19 @@ type DeviceItem = {
 };
 
 export function DashboardPage() {
-  const [devices, setDevices] = useState<DeviceItem[] | null>(null);
-  const [schedules, setSchedules] = useState<ScheduleData[] | null>(null);
+  const [devices, setDevices] = useState<DeviceItem[] | undefined>(undefined);
+  const [schedules, setSchedules] = useState<ScheduleData[] | undefined>(
+    undefined
+  );
   const [showEditor, setShowEditor] = useState<boolean>(false);
+  const [showTinkerView, setShowTinkerView] = useState<boolean>(false);
+  const [showSyncEditor, setShowSyncEditor] = useState<boolean>(false);
   const [scheduleData, setScheduleData] = useState<ScheduleData | undefined>();
 
-  const handleOnSave = (schedule: ScheduleData, isEditMode: boolean) => {
+  const handleOnScheduleSave = (
+    schedule: ScheduleData,
+    isEditMode: boolean
+  ) => {
     if (isEditMode && schedules) {
       const newSchedules = schedules.map((s) => {
         if (s.id == schedule.id) return schedule;
@@ -24,15 +33,11 @@ export function DashboardPage() {
       });
       setSchedules(newSchedules);
       setScheduleData(undefined);
-      setShowEditor(!showEditor);
+      setShowEditor(false);
       return;
     }
 
     setSchedules((currSchedule) => [...(currSchedule || []), schedule]);
-    setShowEditor(!showEditor);
-  };
-
-  const handleOnClose = () => {
     setShowEditor(!showEditor);
   };
 
@@ -46,6 +51,8 @@ export function DashboardPage() {
     setScheduleData(schedule);
     setShowEditor(true);
   };
+
+  const handleOnSync = () => {};
 
   useEffect(() => {
     const intervalId = setInterval(async () => {
@@ -71,11 +78,24 @@ export function DashboardPage() {
     <main className="dashboard-screen">
       {showEditor && (
         <ScheduleEditor
-          onSave={handleOnSave}
-          onClose={handleOnClose}
+          onSave={handleOnScheduleSave}
+          onClose={() => setShowEditor(false)}
           initialData={scheduleData}
         />
       )}
+
+      {showSyncEditor && (
+        <SyncEditor
+          onSync={handleOnSync}
+          schedules={schedules}
+          onClose={() => setShowSyncEditor(false)}
+        />
+      )}
+
+      {showTinkerView && (
+        <TinkerView port="COM5" onClose={() => setShowTinkerView(false)} />
+      )}
+
       <header className="dashboard-header">
         <div>
           <p className="eyebrow">Welcome to</p>
@@ -139,13 +159,22 @@ export function DashboardPage() {
                   <p className="device-meta">Port: {device.path}</p>
                 </div>
                 <div className="device-btn-container">
-                  <button className="device-btn">
+                  <button
+                    className="device-btn"
+                    onClick={() => setShowEditor(true)}
+                  >
                     <Upload />
                   </button>
-                  <button className="device-btn">
+                  <button
+                    className="device-btn"
+                    onClick={() => setShowSyncEditor(true)}
+                  >
                     <Eye />
                   </button>
-                  <button className="device-btn">
+                  <button
+                    className="device-btn"
+                    onClick={() => setShowTinkerView(true)}
+                  >
                     <Hammer />
                   </button>
                 </div>

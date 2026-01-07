@@ -1,31 +1,22 @@
 "use strict";
 const electron = require("electron");
-electron.contextBridge.exposeInMainWorld("ipcRenderer", {
-  on(...args) {
-    const [channel, listener] = args;
-    return electron.ipcRenderer.on(channel, (event, ...args2) => listener(event, ...args2));
-  },
-  off(...args) {
-    const [channel, ...omit] = args;
-    return electron.ipcRenderer.off(channel, ...omit);
-  },
-  send(...args) {
-    const [channel, ...omit] = args;
-    return electron.ipcRenderer.send(channel, ...omit);
-  },
-  invoke(...args) {
-    const [channel, ...omit] = args;
-    return electron.ipcRenderer.invoke(channel, ...omit);
-  }
-});
 electron.contextBridge.exposeInMainWorld("serial", {
-  write: (data) => electron.ipcRenderer.send("serial-write", data),
+  write: (data) => {
+    electron.ipcRenderer.send("serial-write", data);
+  },
   onData: (callback) => {
-    const listener = (_event, data) => callback(data);
+    const listener = (_, data) => {
+      callback(data);
+    };
     electron.ipcRenderer.on("serial-data", listener);
     return () => {
       electron.ipcRenderer.removeListener("serial-data", listener);
     };
   },
-  getDevices: () => electron.ipcRenderer.invoke("serial-devices")
+  getDevices: () => {
+    return electron.ipcRenderer.invoke("serial-devices");
+  },
+  connectDevice: (port) => {
+    electron.ipcRenderer.send("serial-connect", port);
+  }
 });
