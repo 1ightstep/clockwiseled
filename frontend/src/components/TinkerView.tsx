@@ -49,14 +49,18 @@ export function TinkerView({
     return "";
   };
 
+  const [isAlreadyConn, setIsAlreadyConn] = useState<boolean>(false);
   const handleExecute = (overrideCmd?: string) => {
     const finalString = overrideCmd || formatCommand();
 
     const sleep = (ms: number) =>
       new Promise<void>((resolve) => setTimeout(resolve, ms));
     const connectAndWrite = async (port: string, data: string) => {
-      window.serial.connectDevice(port);
-      await sleep(1500);
+      if (!isAlreadyConn) {
+        window.serial.connectDevice(port);
+        await sleep(1500);
+      }
+      setIsAlreadyConn(true);
       window.serial.write(data);
     };
     connectAndWrite(port, finalString);

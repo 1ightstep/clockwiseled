@@ -25,7 +25,6 @@ ipcMain.on("serial-write", (_, data) => {
   if (!currentPort || !currentPort.isOpen) return;
   currentPort.write(Buffer.from(data + "\n", "ascii"), (err) => {
     if (err) console.error("Serial write error:", err.message);
-    currentPort.close();
   });
 });
 ipcMain.handle("serial-devices", async () => {
@@ -41,7 +40,19 @@ ipcMain.handle("serial-devices", async () => {
 });
 ipcMain.on("serial-connect", async (_, portPath) => {
   if (currentPort && currentPort.isOpen) {
-    currentPort.close();
+    console.log("CLOSING EXISTING PORT...");
+    currentPort.removeAllListeners();
+    if (parser) parser.removeAllListeners();
+    await new Promise((resolve, reject) => {
+      currentPort.close((err) => {
+        if (err) {
+          console.error("Error closing port:", err);
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
   }
   currentPort = new SerialPort({
     path: portPath,
@@ -51,5 +62,8 @@ ipcMain.on("serial-connect", async (_, portPath) => {
   parser = currentPort.pipe(new ReadlineParser({ delimiter: "\n" }));
   parser.on("data", (data) => {
     win == null ? void 0 : win.webContents.send("serial-data", data);
+  });
+  currentPort.on("error", (err) => {
+    console.error("Serial Port Error: ", err.message);
   });
 });
