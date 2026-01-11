@@ -2,6 +2,7 @@ import { ScheduleEditor } from "@/components/ScheduleEditor";
 import { ScheduleView } from "@/components/ScheduleView";
 import { SyncEditor } from "@/components/SyncEditor";
 import { TinkerView } from "@/components/TinkerView";
+import { ConnProvider } from "@/contexts/ConnContext";
 import { type ScheduleData } from "@/shared/types";
 import { Eye, Pen, Terminal, UploadCloud, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -99,10 +100,12 @@ export function DashboardPage() {
       )}
 
       {showTinkerView && currDevice && (
-        <TinkerView
-          port={currDevice.path}
-          onClose={() => setShowTinkerView(false)}
-        />
+        <ConnProvider>
+          <TinkerView
+            port={currDevice.path}
+            onClose={() => setShowTinkerView(false)}
+          />
+        </ConnProvider>
       )}
 
       {showScheduleView && currDevice && (

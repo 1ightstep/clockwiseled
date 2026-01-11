@@ -1,3 +1,4 @@
+import { useConn } from "@/hooks/useConn";
 import { Hash, MoveHorizontal, Palette, Send, Terminal, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import "./TinkerView.css";
@@ -49,18 +50,16 @@ export function TinkerView({
     return "";
   };
 
-  const [isAlreadyConn, setIsAlreadyConn] = useState<boolean>(false);
+  const { getConnection, connect } = useConn(port);
   const handleExecute = (overrideCmd?: string) => {
     const finalString = overrideCmd || formatCommand();
 
     const sleep = (ms: number) =>
       new Promise<void>((resolve) => setTimeout(resolve, ms));
     const connectAndWrite = async (port: string, data: string) => {
-      if (!isAlreadyConn) {
-        window.serial.connectDevice(port);
-        await sleep(1500);
+      if (!getConnection || getConnection !== port) {
+        connect(port);
       }
-      setIsAlreadyConn(true);
       window.serial.write(data);
     };
     connectAndWrite(port, finalString);
