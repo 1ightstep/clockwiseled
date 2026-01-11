@@ -83,37 +83,37 @@ export function DashboardPage() {
 
   return (
     <main className="dashboard-screen">
-      {showEditor && (
-        <ScheduleEditor
-          onSave={handleOnScheduleSave}
-          onClose={() => setShowEditor(false)}
-          initialData={scheduleData}
-        />
-      )}
+      <ConnProvider>
+        {showEditor && (
+          <ScheduleEditor
+            onSave={handleOnScheduleSave}
+            onClose={() => setShowEditor(false)}
+            initialData={scheduleData}
+          />
+        )}
 
-      {showSyncEditor && (
-        <SyncEditor
-          onSync={handleOnSync}
-          schedules={schedules}
-          onClose={() => setShowSyncEditor(false)}
-        />
-      )}
+        {showSyncEditor && (
+          <SyncEditor
+            onSync={handleOnSync}
+            schedules={schedules}
+            onClose={() => setShowSyncEditor(false)}
+          />
+        )}
 
-      {showTinkerView && currDevice && (
-        <ConnProvider>
+        {showTinkerView && currDevice && (
           <TinkerView
             port={currDevice.path}
             onClose={() => setShowTinkerView(false)}
           />
-        </ConnProvider>
-      )}
+        )}
 
-      {showScheduleView && currDevice && (
-        <ScheduleView
-          port={currDevice.path}
-          onClose={() => setShowScheduleView(false)}
-        />
-      )}
+        {showScheduleView && currDevice && (
+          <ScheduleView
+            port={currDevice.path}
+            onClose={() => setShowScheduleView(false)}
+          />
+        )}
+      </ConnProvider>
 
       <header className="dashboard-header">
         <div>

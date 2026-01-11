@@ -54,11 +54,9 @@ export function TinkerView({
   const handleExecute = (overrideCmd?: string) => {
     const finalString = overrideCmd || formatCommand();
 
-    const sleep = (ms: number) =>
-      new Promise<void>((resolve) => setTimeout(resolve, ms));
     const connectAndWrite = async (port: string, data: string) => {
       if (!getConnection || getConnection !== port) {
-        connect(port);
+        await connect(port);
       }
       window.serial.write(data);
     };

@@ -8,7 +8,7 @@ import {
 
 type ConnContextValue = {
   getConnection: string | undefined;
-  connect: (port: string) => void;
+  connect: (port: string) => Promise<void>;
 };
 
 export const ConnContext = createContext<ConnContextValue | undefined>(
@@ -23,8 +23,8 @@ export const ConnProvider = ({ children }: { children: ReactNode }) => {
   const connect = useCallback<ConnContextValue["connect"]>(
     async (port: string) => {
       setConn(port);
-      await sleep(1500);
       window.serial.connectDevice(port);
+      await sleep(1500);
     },
     []
   );

@@ -1,6 +1,7 @@
+import { useConn } from "@/hooks/useConn";
 import { type EventItem, type ScheduleData } from "@/shared/types";
 import { Calendar, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./ScheduleView.css";
 
 type ScheduleViewProps = {
@@ -24,13 +25,23 @@ export function ScheduleView({ port, onClose }: ScheduleViewProps) {
   const [activeSchedules, setActiveSchedules] = useState<
     ScheduleListType | undefined
   >(undefined);
-  const sleep = (ms: number) =>
-    new Promise<void>((resolve) => setTimeout(resolve, ms));
-  const connectAndWrite = async (port: string, data: string) => {
-    window.serial.connectDevice(port);
-    await sleep(1500);
-    window.serial.write(data);
+  const { getConnection, connect } = useConn(port);
+  const handleSchedules = (raw: string) => {
+    console.log(raw);
   };
+  const ran = useRef(false);
+  useEffect(() => {
+    if (ran.current) return;
+    ran.current = true;
+    const connectAndWrite = async (port: string, data: string) => {
+      if (!getConnection || getConnection !== port) {
+        await connect(port);
+      }
+      window.serial.write(data);
+    };
+    window.serial.onData(handleSchedules);
+    connectAndWrite(port, "GET_ALL_SCHEDULES");
+  }, []);
 
   return (
     <div className="view-fixed-overlay">
