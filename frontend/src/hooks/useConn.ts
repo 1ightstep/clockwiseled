@@ -1,7 +1,7 @@
 import { ConnContext } from "@/contexts/ConnContext";
 import { useContext } from "react";
 
-export const useConn = (port: string) => {
+export const useConn = () => {
   const context = useContext(ConnContext);
 
   if (!context) {

@@ -1,5 +1,6 @@
 import { useConn } from "@/hooks/useConn";
-import { type EventItem, type ScheduleData } from "@/shared/types";
+import { type EventItem } from "@/shared/types";
+import { parseSchedules } from "@/utils/parseSchedules";
 import { Calendar, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import "./ScheduleView.css";
@@ -9,7 +10,7 @@ type ScheduleViewProps = {
   onClose: () => void;
 };
 
-type ScheduleListType = Record<string, ScheduleData>;
+type ScheduleListType = Record<number, EventItem[]>;
 
 const DAYS = [
   "Monday",
@@ -22,25 +23,32 @@ const DAYS = [
 ];
 
 export function ScheduleView({ port, onClose }: ScheduleViewProps) {
-  const [activeSchedules, setActiveSchedules] = useState<
-    ScheduleListType | undefined
-  >(undefined);
-  const { getConnection, connect } = useConn(port);
+  const [activeSchedules, setActiveSchedules] = useState<ScheduleListType>({});
+  const currentScheduleOutput = useRef<string>("");
+
+  const { connection, connect, listen } = useConn();
   const handleSchedules = (raw: string) => {
-    console.log(raw);
+    if (raw.includes("_END_")) {
+      console.log("END");
+      setActiveSchedules(parseSchedules(currentScheduleOutput.current));
+      currentScheduleOutput.current = "";
+    }
+    currentScheduleOutput.current += raw;
   };
-  const ran = useRef(false);
+
   useEffect(() => {
-    if (ran.current) return;
-    ran.current = true;
     const connectAndWrite = async (port: string, data: string) => {
-      if (!getConnection || getConnection !== port) {
+      if (!connection || connection !== port) {
         await connect(port);
       }
       window.serial.write(data);
     };
-    window.serial.onData(handleSchedules);
+    const cleanup = listen(handleSchedules);
     connectAndWrite(port, "GET_ALL_SCHEDULES");
+
+    return () => {
+      cleanup();
+    };
   }, []);
 
   return (
@@ -67,16 +75,16 @@ export function ScheduleView({ port, onClose }: ScheduleViewProps) {
         </header>
 
         <div className="view-grid">
-          {DAYS.map((day: string) => {
-            const schedule = activeSchedules?.[day];
-            const hasEvents = schedule && schedule.events.length > 0;
+          {DAYS.map((day: string, index) => {
+            const schedule = activeSchedules[index];
+            const hasEvents = schedule && schedule.length > 0;
 
             return (
               <div key={day} className="view-day-column">
                 <span className="view-day-label">{day.substring(0, 3)}</span>
 
                 {hasEvents ? (
-                  schedule.events.map((event: EventItem) => (
+                  schedule.map((event: EventItem) => (
                     <div
                       key={event.id}
                       className="view-event-card"
@@ -89,7 +97,6 @@ export function ScheduleView({ port, onClose }: ScheduleViewProps) {
                         {event.startM.toString().padStart(2, "0")} -{" "}
                         {event.endH}:{event.endM.toString().padStart(2, "0")}
                       </span>
-                      <span style={{ opacity: 0.7 }}>{schedule.title}</span>
                     </div>
                   ))
                 ) : (

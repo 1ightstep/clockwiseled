@@ -50,12 +50,12 @@ export function TinkerView({
     return "";
   };
 
-  const { getConnection, connect } = useConn(port);
+  const { connection, connect } = useConn();
   const handleExecute = (overrideCmd?: string) => {
     const finalString = overrideCmd || formatCommand();
 
     const connectAndWrite = async (port: string, data: string) => {
-      if (!getConnection || getConnection !== port) {
+      if (!connection || connection !== port) {
         await connect(port);
       }
       window.serial.write(data);

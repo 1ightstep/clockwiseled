@@ -70,7 +70,6 @@ export function DashboardPage() {
           }
           return device;
         });
-        console.log(formattedDevices);
         setDevices(formattedDevices);
       });
     }, 1000);
