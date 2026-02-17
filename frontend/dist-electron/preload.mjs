@@ -20,3 +20,14 @@ electron.contextBridge.exposeInMainWorld("serial", {
     electron.ipcRenderer.send("serial-connect", port);
   }
 });
+electron.contextBridge.exposeInMainWorld("db", {
+  getAllSchedules: () => {
+    return electron.ipcRenderer.invoke("db-get-all-schedules");
+  },
+  saveSchedule: (schedule) => {
+    return electron.ipcRenderer.invoke("db-save-schedule", schedule);
+  },
+  deleteSchedule: (id) => {
+    return electron.ipcRenderer.invoke("db-delete-schedule", id);
+  }
+});

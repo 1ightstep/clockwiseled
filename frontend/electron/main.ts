@@ -3,8 +3,15 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { type DeviceType } from "./shared/type";
+import { dbOperations } from "./db";
+import { type ScheduleData } from "../src/shared/types";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// Define global __filename and __dirname for native modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+(globalThis as any).__filename = __filename;
+(globalThis as any).__dirname = __dirname;
+
 const require = createRequire(import.meta.url);
 
 const { SerialPort } = require("serialport");
@@ -16,6 +23,8 @@ let parser: any = null;
 
 function createWindow() {
   win = new BrowserWindow({
+    title: "Clockwise",
+    icon: path.join(__dirname, "../public/Logo.png"),
     webPreferences: {
       preload: path.join(__dirname, "preload.mjs"),
     },
@@ -45,7 +54,7 @@ ipcMain.handle("serial-devices", async (): Promise<DeviceType[]> => {
       path: port.path,
       serialNumber: port.serialNumber,
       manufacturer: port.manufacturer,
-    })
+    }),
   );
 
   return devices;
@@ -85,4 +94,34 @@ ipcMain.on("serial-connect", async (_, portPath: string) => {
   currentPort.on("error", (err: Error) => {
     console.error("Serial Port Error: ", err.message);
   });
+});
+
+// Database IPC handlers
+ipcMain.handle("db-get-all-schedules", () => {
+  try {
+    return dbOperations.getAllSchedules();
+  } catch (error) {
+    console.error("Error getting all schedules:", error);
+    throw error;
+  }
+});
+
+ipcMain.handle("db-save-schedule", (_, schedule: ScheduleData) => {
+  try {
+    dbOperations.saveSchedule(schedule);
+    return { success: true };
+  } catch (error) {
+    console.error("Error saving schedule:", error);
+    throw error;
+  }
+});
+
+ipcMain.handle("db-delete-schedule", (_, id: string | number) => {
+  try {
+    dbOperations.deleteSchedule(id);
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting schedule:", error);
+    throw error;
+  }
 });

@@ -3,9 +3,11 @@ import { ScheduleView } from "@/components/ScheduleView";
 import { SyncEditor } from "@/components/SyncEditor";
 import { TinkerView } from "@/components/TinkerView";
 import { ConnProvider } from "@/contexts/ConnContext";
+import { useToast } from "@/hooks/useToast";
 import { type ScheduleData } from "@/shared/types";
 import { Eye, Pen, Terminal, UploadCloud, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import Logo from "@/assets/Logo.svg";
 import "./DashboardPage.css";
 
 type DeviceItem = {
@@ -17,40 +19,67 @@ type DeviceItem = {
 export function DashboardPage() {
   const [devices, setDevices] = useState<DeviceItem[] | undefined>(undefined);
   const [currDevice, setCurrDevice] = useState<DeviceItem | undefined>(
-    undefined
+    undefined,
   );
   const [schedules, setSchedules] = useState<ScheduleData[] | undefined>(
-    undefined
+    undefined,
   );
   const [showEditor, setShowEditor] = useState<boolean>(false);
   const [showTinkerView, setShowTinkerView] = useState<boolean>(false);
   const [showSyncEditor, setShowSyncEditor] = useState<boolean>(false);
   const [showScheduleView, setShowScheduleView] = useState<boolean>(false);
   const [scheduleData, setScheduleData] = useState<ScheduleData | undefined>();
+  const { showToast } = useToast();
 
-  const handleOnScheduleSave = (
+  const handleOnScheduleSave = async (
     schedule: ScheduleData,
-    isEditMode: boolean
+    isEditMode: boolean,
   ) => {
-    if (isEditMode && schedules) {
-      const newSchedules = schedules.map((s) => {
-        if (s.id == schedule.id) return schedule;
-        return s;
-      });
-      setSchedules(newSchedules);
+    try {
+      await window.db.saveSchedule(schedule);
+      
+      if (isEditMode && schedules) {
+        const newSchedules = schedules.map((s) => {
+          if (s.id == schedule.id) return schedule;
+          return s;
+        });
+        setSchedules(newSchedules);
+      } else {
+        setSchedules((currSchedule) => [...(currSchedule || []), schedule]);
+      }
+      
       setScheduleData(undefined);
       setShowEditor(false);
-      return;
+      showToast(
+        isEditMode ? "Schedule updated successfully!" : "Schedule saved successfully!",
+        3000,
+        "success"
+      );
+    } catch (error) {
+      console.error("Failed to save schedule:", error);
+      showToast(
+        `Failed to save schedule: ${error instanceof Error ? error.message : "Unknown error"}`,
+        5000,
+        "error"
+      );
     }
-
-    setSchedules((currSchedule) => [...(currSchedule || []), schedule]);
-    setShowEditor(!showEditor);
   };
 
-  const handleScheduleDelete = (id: ScheduleData["id"]) => {
-    if (!schedules) return;
-    const newSchedules: ScheduleData[] = schedules.filter((s) => s.id !== id);
-    setSchedules(newSchedules);
+  const handleScheduleDelete = async (id: ScheduleData["id"]) => {
+    try {
+      await window.db.deleteSchedule(id);
+      if (!schedules) return;
+      const newSchedules: ScheduleData[] = schedules.filter((s) => s.id !== id);
+      setSchedules(newSchedules);
+      showToast("Schedule deleted successfully!", 3000, "success");
+    } catch (error) {
+      console.error("Failed to delete schedule:", error);
+      showToast(
+        `Failed to delete schedule: ${error instanceof Error ? error.message : "Unknown error"}`,
+        5000,
+        "error"
+      );
+    }
   };
 
   const handleEditSchedule = (schedule: ScheduleData) => {
@@ -59,6 +88,20 @@ export function DashboardPage() {
   };
 
   const handleOnSync = () => {};
+
+  // Load schedules from database on mount
+  useEffect(() => {
+    const loadSchedules = async () => {
+      try {
+        const savedSchedules = await window.db.getAllSchedules();
+        setSchedules(savedSchedules);
+      } catch (error) {
+        console.error("Failed to load schedules:", error);
+      }
+    };
+    
+    loadSchedules();
+  }, []);
 
   useEffect(() => {
     const intervalId = setInterval(async () => {
@@ -115,12 +158,15 @@ export function DashboardPage() {
       </ConnProvider>
 
       <header className="dashboard-header">
-        <div>
-          <p className="eyebrow">Welcome to</p>
-          <h1>Clockwise dashboard</h1>
-          <p className="subtle">
-            Monitor schedules and keep every device in sync.
-          </p>
+        <div className="header-content">
+          <img src={Logo} alt="Clockwise Logo" className="header-logo" />
+          <div>
+            <p className="eyebrow">Welcome to</p>
+            <h1>Clockwise dashboard</h1>
+            <p className="subtle">
+              Monitor schedules and keep every device in sync.
+            </p>
+          </div>
         </div>
       </header>
 

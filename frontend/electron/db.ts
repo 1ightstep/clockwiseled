@@ -1,0 +1,218 @@
+import Database from "better-sqlite3";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { app } from "electron";
+
+// Define global __filename and __dirname for native modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+(globalThis as any).__filename = __filename;
+(globalThis as any).__dirname = __dirname;
+
+let db: Database | null = null;
+let stmts: any = null;
+
+// Initialize database lazily
+function getDatabase(): Database {
+  if (!db) {
+    // Get user data path for storing database
+    const userDataPath = app.getPath("userData");
+    const dbPath = path.join(userDataPath, "clockwise.db");
+
+    // Initialize database
+    db = new Database(dbPath);
+
+    // Create tables
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS schedules (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        day TEXT NOT NULL,
+        created_at INTEGER DEFAULT (strftime('%s', 'now')),
+        updated_at INTEGER DEFAULT (strftime('%s', 'now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS events (
+        id TEXT PRIMARY KEY,
+        schedule_id TEXT NOT NULL,
+        start_h INTEGER NOT NULL,
+        start_m INTEGER NOT NULL,
+        end_h INTEGER NOT NULL,
+        end_m INTEGER NOT NULL,
+        r INTEGER NOT NULL,
+        g INTEGER NOT NULL,
+        b INTEGER NOT NULL,
+        FOREIGN KEY (schedule_id) REFERENCES schedules(id) ON DELETE CASCADE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_events_schedule_id ON events(schedule_id);
+    `);
+
+    // Initialize prepared statements
+    stmts = {
+      // Schedules
+      insertSchedule: db.prepare(`
+        INSERT INTO schedules (id, title, description, day, updated_at)
+        VALUES (?, ?, ?, ?, strftime('%s', 'now'))
+      `),
+
+      updateSchedule: db.prepare(`
+        UPDATE schedules 
+        SET title = ?, description = ?, day = ?, updated_at = strftime('%s', 'now')
+        WHERE id = ?
+      `),
+
+      deleteSchedule: db.prepare("DELETE FROM schedules WHERE id = ?"),
+
+      getSchedule: db.prepare("SELECT * FROM schedules WHERE id = ?"),
+
+      getAllSchedules: db.prepare(
+        "SELECT * FROM schedules ORDER BY updated_at DESC",
+      ),
+
+      // Events
+      insertEvent: db.prepare(`
+        INSERT INTO events (id, schedule_id, start_h, start_m, end_h, end_m, r, g, b)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `),
+
+      deleteEventsBySchedule: db.prepare(
+        "DELETE FROM events WHERE schedule_id = ?",
+      ),
+
+      getEventsBySchedule: db.prepare(
+        "SELECT * FROM events WHERE schedule_id = ?",
+      ),
+    };
+  }
+  return db;
+}
+
+// Database operations
+export const dbOperations = {
+  // Save or update schedule with events
+  saveSchedule: (schedule: {
+    id: string | number;
+    title: string;
+    description: string;
+    day: string;
+    events: Array<{
+      id: string | number;
+      startH: number;
+      startM: number;
+      endH: number;
+      endM: number;
+      r: number;
+      g: number;
+      b: number;
+    }>;
+  }) => {
+    const database = getDatabase();
+    const transaction = database.transaction(() => {
+      // Check if schedule exists
+      const existing = stmts.getSchedule.get(String(schedule.id));
+
+      if (existing) {
+        // Update schedule
+        stmts.updateSchedule.run(
+          schedule.title,
+          schedule.description,
+          schedule.day,
+          String(schedule.id),
+        );
+        // Delete old events
+        stmts.deleteEventsBySchedule.run(String(schedule.id));
+      } else {
+        // Insert new schedule
+        stmts.insertSchedule.run(
+          String(schedule.id),
+          schedule.title,
+          schedule.description,
+          schedule.day,
+        );
+      }
+
+      // Insert events
+      for (const event of schedule.events) {
+        stmts.insertEvent.run(
+          String(event.id),
+          String(schedule.id),
+          event.startH,
+          event.startM,
+          event.endH,
+          event.endM,
+          event.r,
+          event.g,
+          event.b,
+        );
+      }
+    });
+
+    transaction();
+  },
+
+  // Get all schedules with events
+  getAllSchedules: () => {
+    getDatabase(); // Ensure database is initialized
+    const schedules = stmts.getAllSchedules.all() as Array<{
+      id: string;
+      title: string;
+      description: string;
+      day: string;
+      created_at: number;
+      updated_at: number;
+    }>;
+
+    return schedules.map((schedule) => {
+      const events = stmts.getEventsBySchedule.all(schedule.id) as Array<{
+        id: string;
+        schedule_id: string;
+        start_h: number;
+        start_m: number;
+        end_h: number;
+        end_m: number;
+        r: number;
+        g: number;
+        b: number;
+      }>;
+
+      return {
+        id: schedule.id,
+        title: schedule.title,
+        description: schedule.description,
+        day: schedule.day,
+        events: events.map((e) => ({
+          id: e.id,
+          startH: e.start_h,
+          startM: e.start_m,
+          endH: e.end_h,
+          endM: e.end_m,
+          r: e.r,
+          g: e.g,
+          b: e.b,
+        })),
+      };
+    });
+  },
+
+  // Delete schedule (cascade deletes events)
+  deleteSchedule: (id: string | number) => {
+    getDatabase(); // Ensure database is initialized
+    stmts.deleteSchedule.run(String(id));
+  },
+
+  // Close database connection
+  close: () => {
+    if (db) {
+      db.close();
+      db = null;
+      stmts = null;
+    }
+  },
+};
+
+// Close database on app quit
+app.on("before-quit", () => {
+  dbOperations.close();
+});

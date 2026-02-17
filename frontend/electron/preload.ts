@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { type DeviceType } from "./shared/type";
+import { type ScheduleData } from "../src/shared/types";
 
 contextBridge.exposeInMainWorld("serial", {
   write: (data: string) => {
@@ -24,5 +25,19 @@ contextBridge.exposeInMainWorld("serial", {
 
   connectDevice: (port: string) => {
     ipcRenderer.send("serial-connect", port);
+  },
+});
+
+contextBridge.exposeInMainWorld("db", {
+  getAllSchedules: (): Promise<ScheduleData[]> => {
+    return ipcRenderer.invoke("db-get-all-schedules");
+  },
+  
+  saveSchedule: (schedule: ScheduleData): Promise<{ success: boolean }> => {
+    return ipcRenderer.invoke("db-save-schedule", schedule);
+  },
+  
+  deleteSchedule: (id: string | number): Promise<{ success: boolean }> => {
+    return ipcRenderer.invoke("db-delete-schedule", id);
   },
 });
