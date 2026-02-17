@@ -4,21 +4,15 @@ import { SyncEditor } from "@/components/SyncEditor";
 import { TinkerView } from "@/components/TinkerView";
 import { ConnProvider } from "@/contexts/ConnContext";
 import { useToast } from "@/hooks/useToast";
-import { type ScheduleData } from "@/shared/types";
+import { type DeviceType, type ScheduleData } from "@/shared/types";
 import { Eye, Pen, Terminal, UploadCloud, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import Logo from "@/assets/Logo.svg";
 import "./DashboardPage.css";
 
-type DeviceItem = {
-  path: string;
-  serialNumber?: string;
-  manufacturer?: string;
-};
-
 export function DashboardPage() {
-  const [devices, setDevices] = useState<DeviceItem[] | undefined>(undefined);
-  const [currDevice, setCurrDevice] = useState<DeviceItem | undefined>(
+  const [devices, setDevices] = useState<DeviceType[] | undefined>(undefined);
+  const [currDevice, setCurrDevice] = useState<DeviceType | undefined>(
     undefined,
   );
   const [schedules, setSchedules] = useState<ScheduleData[] | undefined>(
@@ -37,30 +31,32 @@ export function DashboardPage() {
   ) => {
     try {
       await window.db.saveSchedule(schedule);
-      
+
       if (isEditMode && schedules) {
         const newSchedules = schedules.map((s) => {
-          if (s.id == schedule.id) return schedule;
+          if (s.id === schedule.id) return schedule;
           return s;
         });
         setSchedules(newSchedules);
       } else {
         setSchedules((currSchedule) => [...(currSchedule || []), schedule]);
       }
-      
+
       setScheduleData(undefined);
       setShowEditor(false);
       showToast(
-        isEditMode ? "Schedule updated successfully!" : "Schedule saved successfully!",
+        isEditMode
+          ? "Schedule updated successfully!"
+          : "Schedule saved successfully!",
         3000,
-        "success"
+        "success",
       );
     } catch (error) {
       console.error("Failed to save schedule:", error);
       showToast(
         `Failed to save schedule: ${error instanceof Error ? error.message : "Unknown error"}`,
         5000,
-        "error"
+        "error",
       );
     }
   };
@@ -77,7 +73,7 @@ export function DashboardPage() {
       showToast(
         `Failed to delete schedule: ${error instanceof Error ? error.message : "Unknown error"}`,
         5000,
-        "error"
+        "error",
       );
     }
   };
@@ -87,7 +83,10 @@ export function DashboardPage() {
     setShowEditor(true);
   };
 
-  const handleOnSync = () => {};
+  const handleOnSync = (assignment: Record<string, ScheduleData>) => {
+    // TODO: Implement sync logic to upload schedules to device
+    console.log("Syncing schedules to device:", assignment);
+  };
 
   // Load schedules from database on mount
   useEffect(() => {
@@ -99,14 +98,14 @@ export function DashboardPage() {
         console.error("Failed to load schedules:", error);
       }
     };
-    
+
     loadSchedules();
   }, []);
 
   useEffect(() => {
     const intervalId = setInterval(async () => {
       if (showTinkerView) return;
-      window.serial.getDevices().then((devices: DeviceItem[]) => {
+      window.serial.getDevices().then((devices: DeviceType[]) => {
         const formattedDevices = devices.map((device) => {
           if (device.manufacturer?.toLowerCase() === "wch.cn") {
             return { ...device, manufacturer: "Clockwise Device :)" };
@@ -200,7 +199,7 @@ export function DashboardPage() {
             ))}
           <article
             className="add-schedule-card"
-            onClick={() => setShowEditor((prevState) => !prevState)}
+            onClick={() => setShowEditor(true)}
           >
             +
           </article>
@@ -214,8 +213,8 @@ export function DashboardPage() {
         </div>
         <div className="devices-list">
           {devices?.length ? (
-            devices.map((device, index) => (
-              <article key={index} className="device-card">
+            devices.map((device) => (
+              <article key={device.path} className="device-card">
                 <div>
                   <p className="device-label">Device</p>
                   <h3>{device.manufacturer}</h3>

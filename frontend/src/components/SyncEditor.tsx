@@ -20,17 +20,65 @@ const DAYS = [
   "Saturday",
 ];
 
+const DAY_INDEX: Record<string, number> = {
+  Sunday: 0,
+  Monday: 1,
+  Tuesday: 2,
+  Wednesday: 3,
+  Thursday: 4,
+  Friday: 5,
+  Saturday: 6,
+};
+
 export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
   const { showToast } = useToast();
   const [assignments, setAssignments] = useState<Record<string, string>>({});
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleSelect = (day: string, scheduleId: string) => {
     setAssignments((prev) => ({ ...prev, [day]: scheduleId }));
   };
 
-  const validateAndUpload = () => {
+  const generateUploadCommands = (
+    assignment: Record<string, ScheduleData>,
+  ): string[] => {
+    const commands: string[] = [];
+
+    Object.entries(assignment).forEach(([day, schedule]) => {
+      const dayIndex = DAY_INDEX[day];
+
+      commands.push(`UPLOAD ${dayIndex}`);
+
+      // Sort events by start time
+      const sortedEvents = [...schedule.events].sort(
+        (a, b) => a.startH * 60 + a.startM - (b.startH * 60 + b.startM),
+      );
+
+      sortedEvents.forEach((event) => {
+        commands.push(
+          `CONT_UPLOAD ${event.startH} ${event.startM} ${event.endH} ${event.endM} ${event.r} ${event.g} ${event.b}`,
+        );
+      });
+
+      commands.push("END_UPLOAD");
+    });
+
+    return commands;
+  };
+
+  const sendCommandsToDevice = async (commands: string[]) => {
+    const delay = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
+
+    for (const command of commands) {
+      window.serial.write(command);
+      await delay(150); // Delay between commands for Arduino to process
+    }
+  };
+
+  const validateAndUpload = async () => {
     const assignedDays = Object.keys(assignments).filter(
-      (day) => assignments[day] !== ""
+      (day) => assignments[day] !== "",
     );
 
     if (assignedDays.length === 0) {
@@ -45,8 +93,23 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
       if (found) finalData[day] = found;
     });
 
-    onSync(finalData);
-    showToast("Schedules synced to device successfully!", 3000, "success");
+    try {
+      setIsUploading(true);
+      const commands = generateUploadCommands(finalData);
+      await sendCommandsToDevice(commands);
+
+      onSync(finalData);
+      showToast("Schedules synced to device successfully!", 3000, "success");
+      onClose();
+    } catch (error) {
+      showToast(
+        `Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        5000,
+        "error",
+      );
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -71,7 +134,7 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
           {DAYS.map((day) => {
             const selectedId = assignments[day] || "";
             const selectedSchedule = schedules?.find(
-              (s) => s.id === selectedId
+              (s) => s.id === selectedId,
             );
 
             return (
@@ -119,6 +182,7 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
             className="btn-sync"
             style={{ background: "transparent", color: "var(--color-primary)" }}
             onClick={onClose}
+            disabled={isUploading}
           >
             Cancel
           </button>
@@ -126,10 +190,11 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
           <button
             className="btn-sync"
             onClick={validateAndUpload}
+            disabled={isUploading}
             style={{ display: "flex", alignItems: "center", gap: "8px" }}
           >
             <UploadCloud size={18} />
-            Sync
+            {isUploading ? "Uploading..." : "Sync"}
           </button>
         </footer>
       </div>

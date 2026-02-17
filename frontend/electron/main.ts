@@ -62,8 +62,6 @@ ipcMain.handle("serial-devices", async (): Promise<DeviceType[]> => {
 
 ipcMain.on("serial-connect", async (_, portPath: string) => {
   if (currentPort && currentPort.isOpen) {
-    console.log("CLOSING EXISTING PORT...");
-
     currentPort.removeAllListeners();
     if (parser) parser.removeAllListeners();
 

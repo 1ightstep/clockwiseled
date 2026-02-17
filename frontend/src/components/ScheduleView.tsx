@@ -29,7 +29,6 @@ export function ScheduleView({ port, onClose }: ScheduleViewProps) {
   const { connection, connect, listen } = useConn();
   const handleSchedules = (raw: string) => {
     if (raw.includes("_END_")) {
-      console.log("END");
       setActiveSchedules(parseSchedules(currentScheduleOutput.current));
       currentScheduleOutput.current = "";
     }

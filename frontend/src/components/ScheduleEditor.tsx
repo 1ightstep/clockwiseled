@@ -31,13 +31,13 @@ export function ScheduleEditor({
 }: ScheduleEditorProps) {
   const [title, setTitle] = useState(initialData?.title || "");
   const [description, setDescription] = useState(
-    initialData?.description || ""
+    initialData?.description || "",
   );
   const [day, setDay] = useState(initialData?.day || "Sunday");
   const [events, setEvents] = useState<EventItem[]>(initialData?.events || []);
   const { showToast } = useToast();
 
-  const isEditMode = !!initialData; //convert to boolean
+  const isEditMode = !!initialData;
 
   const addEvent = () => {
     const newEvent: EventItem = {
@@ -56,41 +56,33 @@ export function ScheduleEditor({
   const updateEvent = (
     id: string | number,
     field: keyof EventItem,
-    value: number
+    value: number,
   ) => {
     setEvents(
-      events.map((ev) => (ev.id === id ? { ...ev, [field]: value } : ev))
+      events.map((ev) => (ev.id === id ? { ...ev, [field]: value } : ev)),
     );
   };
 
   const removeEvent = (id: string | number) => {
-    setEvents(events.filter((ev) => ev.id != id));
+    setEvents(events.filter((ev) => ev.id !== id));
   };
 
   const handleSave = () => {
-    const schedule: ScheduleData = {
-      id: crypto.randomUUID(),
+    const scheduleData: ScheduleData = {
+      id: isEditMode && initialData ? initialData.id : crypto.randomUUID(),
       title,
       description,
       day,
       events,
     };
-    const isValidData: ValidationResult = getScheduleValidation(schedule);
+    const isValidData: ValidationResult = getScheduleValidation(scheduleData);
 
     if (!isValidData.valid && isValidData.reason) {
       showToast(isValidData.reason, 3000, "error");
       return;
     }
 
-    if (!isEditMode) {
-      onSave(
-        { id: crypto.randomUUID(), title, description, day, events },
-        isEditMode
-      );
-      return;
-    }
-    onSave({ id: initialData.id, title, description, day, events }, isEditMode);
-    return;
+    onSave(scheduleData, isEditMode);
   };
 
   return (

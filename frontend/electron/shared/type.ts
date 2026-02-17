@@ -1,5 +1,2 @@
-export type DeviceType = {
-  path: string;
-  serialNumber?: string;
-  manufacturer?: string;
-};
+// Re-export from shared types for electron process
+export type { DeviceType } from "../../src/shared/types";
