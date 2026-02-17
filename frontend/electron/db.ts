@@ -2,27 +2,63 @@ import Database from "better-sqlite3";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { app } from "electron";
+import { type ScheduleData } from "../src/shared/types";
 
-// Define global __filename and __dirname for native modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 (globalThis as any).__filename = __filename;
 (globalThis as any).__dirname = __dirname;
 
-let db: Database | null = null;
-let stmts: any = null;
+type DbStatement = {
+  insertSchedule: Database.Statement;
+  updateSchedule: Database.Statement;
+  deleteSchedule: Database.Statement;
+  getSchedule: Database.Statement;
+  getAllSchedules: Database.Statement;
+  insertEvent: Database.Statement;
+  deleteEventsBySchedule: Database.Statement;
+  getEventsBySchedule: Database.Statement;
+};
 
-// Initialize database lazily
-function getDatabase(): Database {
+let db: Database.Database | null = null;
+let stmts: DbStatement | null = null;
+
+function initializeStatements(database: Database.Database): DbStatement {
+  return {
+    insertSchedule: database.prepare(`
+      INSERT INTO schedules (id, title, description, day, updated_at)
+      VALUES (?, ?, ?, ?, strftime('%s', 'now'))
+    `),
+    updateSchedule: database.prepare(`
+      UPDATE schedules 
+      SET title = ?, description = ?, day = ?, updated_at = strftime('%s', 'now')
+      WHERE id = ?
+    `),
+    deleteSchedule: database.prepare("DELETE FROM schedules WHERE id = ?"),
+    getSchedule: database.prepare("SELECT * FROM schedules WHERE id = ?"),
+    getAllSchedules: database.prepare(
+      "SELECT * FROM schedules ORDER BY updated_at DESC",
+    ),
+    insertEvent: database.prepare(`
+      INSERT INTO events (id, schedule_id, start_h, start_m, end_h, end_m, r, g, b)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `),
+    deleteEventsBySchedule: database.prepare(
+      "DELETE FROM events WHERE schedule_id = ?",
+    ),
+    getEventsBySchedule: database.prepare(
+      "SELECT * FROM events WHERE schedule_id = ?",
+    ),
+  };
+}
+
+function getDatabase(): Database.Database {
   if (!db) {
-    // Get user data path for storing database
     const userDataPath = app.getPath("userData");
     const dbPath = path.join(userDataPath, "clockwise.db");
 
-    // Initialize database
     db = new Database(dbPath);
 
-    // Create tables
     db.exec(`
       CREATE TABLE IF NOT EXISTS schedules (
         id TEXT PRIMARY KEY,
@@ -49,83 +85,39 @@ function getDatabase(): Database {
       CREATE INDEX IF NOT EXISTS idx_events_schedule_id ON events(schedule_id);
     `);
 
-    // Initialize prepared statements
-    stmts = {
-      // Schedules
-      insertSchedule: db.prepare(`
-        INSERT INTO schedules (id, title, description, day, updated_at)
-        VALUES (?, ?, ?, ?, strftime('%s', 'now'))
-      `),
-
-      updateSchedule: db.prepare(`
-        UPDATE schedules 
-        SET title = ?, description = ?, day = ?, updated_at = strftime('%s', 'now')
-        WHERE id = ?
-      `),
-
-      deleteSchedule: db.prepare("DELETE FROM schedules WHERE id = ?"),
-
-      getSchedule: db.prepare("SELECT * FROM schedules WHERE id = ?"),
-
-      getAllSchedules: db.prepare(
-        "SELECT * FROM schedules ORDER BY updated_at DESC",
-      ),
-
-      // Events
-      insertEvent: db.prepare(`
-        INSERT INTO events (id, schedule_id, start_h, start_m, end_h, end_m, r, g, b)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `),
-
-      deleteEventsBySchedule: db.prepare(
-        "DELETE FROM events WHERE schedule_id = ?",
-      ),
-
-      getEventsBySchedule: db.prepare(
-        "SELECT * FROM events WHERE schedule_id = ?",
-      ),
-    };
+    stmts = initializeStatements(db);
   }
+
   return db;
 }
 
-// Database operations
+function getStatements(): DbStatement {
+  if (!stmts) {
+    getDatabase();
+  }
+  return stmts!;
+}
+
 export const dbOperations = {
-  // Save or update schedule with events
-  saveSchedule: (schedule: {
-    id: string | number;
-    title: string;
-    description: string;
-    day: string;
-    events: Array<{
-      id: string | number;
-      startH: number;
-      startM: number;
-      endH: number;
-      endM: number;
-      r: number;
-      g: number;
-      b: number;
-    }>;
-  }) => {
+  saveSchedule: (schedule: ScheduleData) => {
     const database = getDatabase();
-    const transaction = database.transaction(() => {
-      // Check if schedule exists
-      const existing = stmts.getSchedule.get(String(schedule.id));
+    const statements = getStatements();
+
+    const txn = database.transaction(() => {
+      const existing = statements.getSchedule.get(String(schedule.id)) as
+        | { id: string }
+        | undefined;
 
       if (existing) {
-        // Update schedule
-        stmts.updateSchedule.run(
+        statements.updateSchedule.run(
           schedule.title,
           schedule.description,
           schedule.day,
           String(schedule.id),
         );
-        // Delete old events
-        stmts.deleteEventsBySchedule.run(String(schedule.id));
+        statements.deleteEventsBySchedule.run(String(schedule.id));
       } else {
-        // Insert new schedule
-        stmts.insertSchedule.run(
+        statements.insertSchedule.run(
           String(schedule.id),
           schedule.title,
           schedule.description,
@@ -133,9 +125,8 @@ export const dbOperations = {
         );
       }
 
-      // Insert events
       for (const event of schedule.events) {
-        stmts.insertEvent.run(
+        statements.insertEvent.run(
           String(event.id),
           String(schedule.id),
           event.startH,
@@ -149,13 +140,14 @@ export const dbOperations = {
       }
     });
 
-    transaction();
+    txn();
   },
 
-  // Get all schedules with events
-  getAllSchedules: () => {
-    getDatabase(); // Ensure database is initialized
-    const schedules = stmts.getAllSchedules.all() as Array<{
+  getAllSchedules: (): ScheduleData[] => {
+    getDatabase();
+    const statements = getStatements();
+
+    const schedules = statements.getAllSchedules.all() as Array<{
       id: string;
       title: string;
       description: string;
@@ -165,7 +157,7 @@ export const dbOperations = {
     }>;
 
     return schedules.map((schedule) => {
-      const events = stmts.getEventsBySchedule.all(schedule.id) as Array<{
+      const events = statements.getEventsBySchedule.all(schedule.id) as Array<{
         id: string;
         schedule_id: string;
         start_h: number;
@@ -196,13 +188,12 @@ export const dbOperations = {
     });
   },
 
-  // Delete schedule (cascade deletes events)
   deleteSchedule: (id: string | number) => {
-    getDatabase(); // Ensure database is initialized
-    stmts.deleteSchedule.run(String(id));
+    getDatabase();
+    const statements = getStatements();
+    statements.deleteSchedule.run(String(id));
   },
 
-  // Close database connection
   close: () => {
     if (db) {
       db.close();
@@ -212,7 +203,6 @@ export const dbOperations = {
   },
 };
 
-// Close database on app quit
 app.on("before-quit", () => {
   dbOperations.close();
 });

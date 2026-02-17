@@ -1,3 +1,12 @@
+import {
+  DAYS,
+  DAY_INDEX,
+  DEFAULT_COLORS,
+  SERIAL_CONFIG,
+  TOAST_DURATION,
+  TOAST_TYPE,
+  UI,
+} from "@/constants";
 import { useToast } from "@/hooks/useToast";
 import { type ScheduleData } from "@/shared/types";
 import { UploadCloud, X } from "lucide-react";
@@ -8,26 +17,6 @@ type DeviceSyncProps = {
   schedules: ScheduleData[] | undefined;
   onSync: (assignment: Record<string, ScheduleData>) => void;
   onClose: () => void;
-};
-
-const DAYS = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
-
-const DAY_INDEX: Record<string, number> = {
-  Sunday: 0,
-  Monday: 1,
-  Tuesday: 2,
-  Wednesday: 3,
-  Thursday: 4,
-  Friday: 5,
-  Saturday: 6,
 };
 
 export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
@@ -45,11 +34,10 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
     const commands: string[] = [];
 
     Object.entries(assignment).forEach(([day, schedule]) => {
-      const dayIndex = DAY_INDEX[day];
+      const dayIndex: number = DAY_INDEX[day as keyof typeof DAY_INDEX];
 
       commands.push(`UPLOAD ${dayIndex}`);
 
-      // Sort events by start time
       const sortedEvents = [...schedule.events].sort(
         (a, b) => a.startH * 60 + a.startM - (b.startH * 60 + b.startM),
       );
@@ -72,7 +60,7 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
 
     for (const command of commands) {
       window.serial.write(command);
-      await delay(150); // Delay between commands for Arduino to process
+      await delay(SERIAL_CONFIG.COMMAND_SEND_DELAY_MS);
     }
   };
 
@@ -82,7 +70,11 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
     );
 
     if (assignedDays.length === 0) {
-      showToast("Please assign at least one schedule to a day.", 3000, "error");
+      showToast(
+        "Please assign at least one schedule to a day.",
+        TOAST_DURATION.NORMAL,
+        TOAST_TYPE.ERROR,
+      );
       return;
     }
 
@@ -99,13 +91,17 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
       await sendCommandsToDevice(commands);
 
       onSync(finalData);
-      showToast("Schedules synced to device successfully!", 3000, "success");
+      showToast(
+        "Schedules synced to device successfully!",
+        TOAST_DURATION.NORMAL,
+        TOAST_TYPE.SUCCESS,
+      );
       onClose();
     } catch (error) {
       showToast(
         `Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-        5000,
-        "error",
+        TOAST_DURATION.LONG,
+        TOAST_TYPE.ERROR,
       );
     } finally {
       setIsUploading(false);
@@ -116,15 +112,15 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
     <div className="sync-fixed-overlay">
       <div className="sync-container">
         <button className="exit-btn" onClick={onClose}>
-          <X size={20} />
+          <X size={UI.ICON_SIZES.LARGE} />
         </button>
 
         <div className="sync-header">
           <div>
-            <h2 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <UploadCloud size={24} color="var(--color-brand)" /> Device Sync
+            <h2 className="sync-header-title">
+              <UploadCloud size={UI.ICON_SIZES.XLARGE} color="var(--color-brand)" /> Device Sync
             </h2>
-            <p style={{ fontSize: "var(--text-sm)", opacity: 0.6 }}>
+            <p className="sync-header-subtitle">
               Assign a schedule to each day of the week.
             </p>
           </div>
@@ -160,16 +156,18 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
                 {selectedSchedule && (
                   <div
                     className="preview-card"
-                    style={{
-                      borderLeft: `4px solid rgb(${
-                        selectedSchedule.events[0]?.r || 149
-                      }, ${selectedSchedule.events[0]?.g || 149}, ${
-                        selectedSchedule.events[0]?.b || 216
-                      })`,
-                    }}
+                    style={
+                      {
+                        "--event-color": `rgb(${selectedSchedule.events[0]?.r || DEFAULT_COLORS.RGB.R
+                          }, ${selectedSchedule.events[0]?.g || DEFAULT_COLORS.RGB.G}, ${selectedSchedule.events[0]?.b || DEFAULT_COLORS.RGB.B
+                          })`,
+                      } as React.CSSProperties
+                    }
                   >
                     <strong>{selectedSchedule.events.length} Events</strong>
-                    <div style={{ opacity: 0.7 }}>{selectedSchedule.title}</div>
+                    <div className="preview-card-title">
+                      {selectedSchedule.title}
+                    </div>
                   </div>
                 )}
               </div>
@@ -179,8 +177,7 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
 
         <footer className="sync-footer">
           <button
-            className="btn-sync"
-            style={{ background: "transparent", color: "var(--color-primary)" }}
+            className="btn-sync btn-sync-cancel"
             onClick={onClose}
             disabled={isUploading}
           >
@@ -188,12 +185,11 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
           </button>
 
           <button
-            className="btn-sync"
+            className="btn-sync btn-sync-primary"
             onClick={validateAndUpload}
             disabled={isUploading}
-            style={{ display: "flex", alignItems: "center", gap: "8px" }}
           >
-            <UploadCloud size={18} />
+            <UploadCloud size={UI.ICON_SIZES.MEDIUM} />
             {isUploading ? "Uploading..." : "Sync"}
           </button>
         </footer>

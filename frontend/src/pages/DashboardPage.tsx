@@ -1,3 +1,10 @@
+import {
+  ARDUINO_COMMANDS,
+  DEVICE_CONFIG,
+  TOAST_DURATION,
+  TOAST_TYPE,
+  UI,
+} from "@/constants";
 import { ScheduleEditor } from "@/components/ScheduleEditor";
 import { ScheduleView } from "@/components/ScheduleView";
 import { SyncEditor } from "@/components/SyncEditor";
@@ -48,15 +55,15 @@ export function DashboardPage() {
         isEditMode
           ? "Schedule updated successfully!"
           : "Schedule saved successfully!",
-        3000,
-        "success",
+        TOAST_DURATION.NORMAL,
+        TOAST_TYPE.SUCCESS,
       );
     } catch (error) {
       console.error("Failed to save schedule:", error);
       showToast(
         `Failed to save schedule: ${error instanceof Error ? error.message : "Unknown error"}`,
-        5000,
-        "error",
+        TOAST_DURATION.LONG,
+        TOAST_TYPE.ERROR,
       );
     }
   };
@@ -67,13 +74,17 @@ export function DashboardPage() {
       if (!schedules) return;
       const newSchedules: ScheduleData[] = schedules.filter((s) => s.id !== id);
       setSchedules(newSchedules);
-      showToast("Schedule deleted successfully!", 3000, "success");
+      showToast(
+        "Schedule deleted successfully!",
+        TOAST_DURATION.NORMAL,
+        TOAST_TYPE.SUCCESS,
+      );
     } catch (error) {
       console.error("Failed to delete schedule:", error);
       showToast(
         `Failed to delete schedule: ${error instanceof Error ? error.message : "Unknown error"}`,
-        5000,
-        "error",
+        TOAST_DURATION.LONG,
+        TOAST_TYPE.ERROR,
       );
     }
   };
@@ -84,11 +95,9 @@ export function DashboardPage() {
   };
 
   const handleOnSync = (assignment: Record<string, ScheduleData>) => {
-    // TODO: Implement sync logic to upload schedules to device
     console.log("Syncing schedules to device:", assignment);
   };
 
-  // Load schedules from database on mount
   useEffect(() => {
     const loadSchedules = async () => {
       try {
@@ -114,9 +123,9 @@ export function DashboardPage() {
         });
         setDevices(formattedDevices);
       });
-    }, 1000);
+    }, DEVICE_CONFIG.REFRESH_INTERVAL_MS);
 
-    window.serial.write("ON 255 0 0\n");
+    window.serial.write(`${ARDUINO_COMMANDS.ON} 255 0 0\n`);
     return () => {
       clearInterval(intervalId);
     };
@@ -186,13 +195,13 @@ export function DashboardPage() {
                     className="edit-schedule-btn"
                     onClick={() => handleEditSchedule(item)}
                   >
-                    <Pen size="1.2rem" />
+                    <Pen size={UI.ICON_SIZES.LARGE} />
                   </button>
                   <button
                     className="del-schedule-btn"
                     onClick={() => handleScheduleDelete(item.id)}
                   >
-                    <X size="1.5rem" />
+                    <X size={UI.ICON_SIZES.XLARGE} />
                   </button>
                 </div>
               </article>

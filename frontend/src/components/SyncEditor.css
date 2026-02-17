@@ -109,3 +109,32 @@
   border-radius: var(--radius-sm);
   margin-top: auto;
 }
+.sync-header-title {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-xs);
+}
+
+.sync-header-subtitle {
+  font-size: var(--text-sm);
+  opacity: 0.6;
+}
+
+.preview-card {
+  border-left: 4px solid var(--event-color, var(--color-brand));
+}
+
+.preview-card-title {
+  opacity: 0.7;
+}
+
+.btn-sync-cancel {
+  background: transparent;
+  color: var(--color-primary);
+}
+
+.btn-sync-primary {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-xs);
+}

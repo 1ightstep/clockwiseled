@@ -1,3 +1,4 @@
+import { TOAST_DURATION, TOAST_TYPE } from "@/constants";
 import {
   createContext,
   useCallback,
@@ -30,7 +31,7 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
   const [toast, setToast] = useState<ToastType | null>(null);
 
   const showToast = useCallback<ToastContextValue["showToast"]>(
-    (message, duration = 3000, type = "info") => {
+    (message, duration = TOAST_DURATION.NORMAL, type = TOAST_TYPE.INFO) => {
       setToast({ message, duration, type });
     },
     []

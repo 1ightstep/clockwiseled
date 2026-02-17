@@ -158,7 +158,7 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: var(--space-md);
-  border-left: 8px solid;
+  border-left: var(--gap-xs) solid var(--event-color, var(--color-brand));
   display: flex;
   justify-content: space-between;
   align-items: center;

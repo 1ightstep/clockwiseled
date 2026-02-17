@@ -1,3 +1,4 @@
+import { DAYS, UI } from "@/constants";
 import { useConn } from "@/hooks/useConn";
 import { type EventItem } from "@/shared/types";
 import { parseSchedules } from "@/utils/parseSchedules";
@@ -12,63 +13,64 @@ type ScheduleViewProps = {
 
 type ScheduleListType = Record<number, EventItem[]>;
 
-const DAYS = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
-
 export function ScheduleView({ port, onClose }: ScheduleViewProps) {
   const [activeSchedules, setActiveSchedules] = useState<ScheduleListType>({});
   const currentScheduleOutput = useRef<string>("");
 
-  const { connection, connect, listen } = useConn();
   const handleSchedules = (raw: string) => {
+    currentScheduleOutput.current += raw;
     if (raw.includes("_END_")) {
       setActiveSchedules(parseSchedules(currentScheduleOutput.current));
       currentScheduleOutput.current = "";
     }
-    currentScheduleOutput.current += raw;
   };
 
+  const { connection, connect, listen } = useConn();
+  const hasRanOnce = useRef(false);
+
   useEffect(() => {
-    const connectAndWrite = async (port: string, data: string) => {
-      if (!connection || connection !== port) {
-        await connect(port);
+    if (hasRanOnce.current) return;
+    hasRanOnce.current = true;
+
+    const setup = async () => {
+      try {
+        if (!connection || connection !== port) {
+          await connect(port);
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+
+        const cleanup = listen(handleSchedules);
+        window.serial.write("GET_ALL_SCHEDULES");
+
+        return cleanup;
+      } catch (err) {
+        console.error("ScheduleView setup error:", err);
       }
-      window.serial.write(data);
     };
-    const cleanup = listen(handleSchedules);
-    connectAndWrite(port, "GET_ALL_SCHEDULES");
+
+    let cleanup: (() => void) | undefined;
+    setup().then((c) => {
+      cleanup = c;
+    });
 
     return () => {
-      cleanup();
+      if (cleanup) cleanup();
     };
-  }, []);
+  }, [connection, connect, listen, port]);
 
   return (
     <div className="view-fixed-overlay">
       <div className="view-container">
         <button className="exit-btn" onClick={onClose} title="Close View">
-          <X size={20} />
+          <X size={UI.ICON_SIZES.LARGE} />
         </button>
 
         <header className="view-header">
           <h2>
-            <Calendar size={24} color="var(--color-brand)" />
+            <Calendar size={UI.ICON_SIZES.XLARGE} color="var(--color-brand)" />
             Schedule Viewer
           </h2>
-          <p
-            style={{
-              fontSize: "var(--text-xs)",
-              opacity: 0.6,
-              margin: "4px 0 0 0",
-            }}
-          >
+          <p className="view-header-subtitle">
             Overview of currently assigned device tasks
           </p>
         </header>
@@ -87,9 +89,11 @@ export function ScheduleView({ port, onClose }: ScheduleViewProps) {
                     <div
                       key={event.id}
                       className="view-event-card"
-                      style={{
-                        borderLeftColor: `rgb(${event.r}, ${event.g}, ${event.b})`,
-                      }}
+                      style={
+                        {
+                          "--event-color": `rgb(${event.r}, ${event.g}, ${event.b})`,
+                        } as React.CSSProperties
+                      }
                     >
                       <span className="view-event-time">
                         {event.startH}:

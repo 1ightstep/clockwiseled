@@ -145,8 +145,8 @@
 
 .terminal-label {
   position: absolute;
-  top: 8px;
-  right: 12px;
+  top: var(--gap-xs);
+  right: var(--gap-sm);
   font-size: 9px;
   opacity: 0.3;
   letter-spacing: 1px;
@@ -155,7 +155,7 @@
 
 .tinker-terminal code {
   font-size: var(--text-md);
-  text-shadow: 0 0 8px color(from var(--color-brand) srgb r g b / 0.4);
+  text-shadow: 0 0 var(--gap-xs) color(from var(--color-brand) srgb r g b / 0.4);
 }
 
 .log-entry {
@@ -211,4 +211,25 @@
   background: #252535;
   transform: translateY(-1px);
   box-shadow: 0 10px 20px color(from var(--color-primary) srgb r g b / 0.2);
+}
+.tinker-header-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.tinker-header-subtitle {
+  font-size: var(--text-xs);
+  opacity: 0.6;
+}
+
+.btn-tinker-cancel {
+  background: transparent;
+  color: var(--color-primary);
+}
+
+.btn-execute-glow {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-xs);
 }

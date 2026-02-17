@@ -35,6 +35,9 @@
   --space-3xl: clamp(2.5rem, 2.2rem + 1vw, 3.75rem);
   --space-4xl: clamp(3rem, 2.6rem + 1.2vw, 4.5rem);
 
+  --gap-xs: 8px;
+  --gap-sm: 12px;
+
   --shadow-color-strong: color(from var(--color-primary) srgb r g b / 0.12);
   --shadow-color-medium: color(from var(--color-primary) srgb r g b / 0.08);
   --shadow-color-soft: color(from var(--color-primary) srgb r g b / 0.05);

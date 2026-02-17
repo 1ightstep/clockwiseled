@@ -9,6 +9,34 @@ globalThis.__filename = __filename$2;
 globalThis.__dirname = __dirname$2;
 let db = null;
 let stmts = null;
+function initializeStatements(database) {
+  return {
+    insertSchedule: database.prepare(`
+      INSERT INTO schedules (id, title, description, day, updated_at)
+      VALUES (?, ?, ?, ?, strftime('%s', 'now'))
+    `),
+    updateSchedule: database.prepare(`
+      UPDATE schedules 
+      SET title = ?, description = ?, day = ?, updated_at = strftime('%s', 'now')
+      WHERE id = ?
+    `),
+    deleteSchedule: database.prepare("DELETE FROM schedules WHERE id = ?"),
+    getSchedule: database.prepare("SELECT * FROM schedules WHERE id = ?"),
+    getAllSchedules: database.prepare(
+      "SELECT * FROM schedules ORDER BY updated_at DESC"
+    ),
+    insertEvent: database.prepare(`
+      INSERT INTO events (id, schedule_id, start_h, start_m, end_h, end_m, r, g, b)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `),
+    deleteEventsBySchedule: database.prepare(
+      "DELETE FROM events WHERE schedule_id = ?"
+    ),
+    getEventsBySchedule: database.prepare(
+      "SELECT * FROM events WHERE schedule_id = ?"
+    )
+  };
+}
 function getDatabase() {
   if (!db) {
     const userDataPath = app.getPath("userData");
@@ -39,53 +67,32 @@ function getDatabase() {
 
       CREATE INDEX IF NOT EXISTS idx_events_schedule_id ON events(schedule_id);
     `);
-    stmts = {
-      // Schedules
-      insertSchedule: db.prepare(`
-        INSERT INTO schedules (id, title, description, day, updated_at)
-        VALUES (?, ?, ?, ?, strftime('%s', 'now'))
-      `),
-      updateSchedule: db.prepare(`
-        UPDATE schedules 
-        SET title = ?, description = ?, day = ?, updated_at = strftime('%s', 'now')
-        WHERE id = ?
-      `),
-      deleteSchedule: db.prepare("DELETE FROM schedules WHERE id = ?"),
-      getSchedule: db.prepare("SELECT * FROM schedules WHERE id = ?"),
-      getAllSchedules: db.prepare(
-        "SELECT * FROM schedules ORDER BY updated_at DESC"
-      ),
-      // Events
-      insertEvent: db.prepare(`
-        INSERT INTO events (id, schedule_id, start_h, start_m, end_h, end_m, r, g, b)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `),
-      deleteEventsBySchedule: db.prepare(
-        "DELETE FROM events WHERE schedule_id = ?"
-      ),
-      getEventsBySchedule: db.prepare(
-        "SELECT * FROM events WHERE schedule_id = ?"
-      )
-    };
+    stmts = initializeStatements(db);
   }
   return db;
 }
+function getStatements() {
+  if (!stmts) {
+    getDatabase();
+  }
+  return stmts;
+}
 const dbOperations = {
-  // Save or update schedule with events
   saveSchedule: (schedule) => {
     const database = getDatabase();
-    const transaction = database.transaction(() => {
-      const existing = stmts.getSchedule.get(String(schedule.id));
+    const statements = getStatements();
+    const txn = database.transaction(() => {
+      const existing = statements.getSchedule.get(String(schedule.id));
       if (existing) {
-        stmts.updateSchedule.run(
+        statements.updateSchedule.run(
           schedule.title,
           schedule.description,
           schedule.day,
           String(schedule.id)
         );
-        stmts.deleteEventsBySchedule.run(String(schedule.id));
+        statements.deleteEventsBySchedule.run(String(schedule.id));
       } else {
-        stmts.insertSchedule.run(
+        statements.insertSchedule.run(
           String(schedule.id),
           schedule.title,
           schedule.description,
@@ -93,7 +100,7 @@ const dbOperations = {
         );
       }
       for (const event of schedule.events) {
-        stmts.insertEvent.run(
+        statements.insertEvent.run(
           String(event.id),
           String(schedule.id),
           event.startH,
@@ -106,14 +113,14 @@ const dbOperations = {
         );
       }
     });
-    transaction();
+    txn();
   },
-  // Get all schedules with events
   getAllSchedules: () => {
     getDatabase();
-    const schedules = stmts.getAllSchedules.all();
+    const statements = getStatements();
+    const schedules = statements.getAllSchedules.all();
     return schedules.map((schedule) => {
-      const events = stmts.getEventsBySchedule.all(schedule.id);
+      const events = statements.getEventsBySchedule.all(schedule.id);
       return {
         id: schedule.id,
         title: schedule.title,
@@ -132,12 +139,11 @@ const dbOperations = {
       };
     });
   },
-  // Delete schedule (cascade deletes events)
   deleteSchedule: (id) => {
     getDatabase();
-    stmts.deleteSchedule.run(String(id));
+    const statements = getStatements();
+    statements.deleteSchedule.run(String(id));
   },
-  // Close database connection
   close: () => {
     if (db) {
       db.close();
@@ -169,41 +175,26 @@ function createWindow() {
   });
   win.loadURL(process.env.VITE_DEV_SERVER_URL);
 }
-app.whenReady().then(createWindow);
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
-});
-ipcMain.on("serial-write", (_, data) => {
+async function closeCurrentPort() {
   if (!currentPort || !currentPort.isOpen) return;
-  currentPort.write(Buffer.from(data + "\n", "ascii"), (err) => {
-    if (err) console.error("Serial write error:", err.message);
-  });
-});
-ipcMain.handle("serial-devices", async () => {
-  const ports = await SerialPort.list();
-  const devices = ports.map(
-    (port) => ({
-      path: port.path,
-      serialNumber: port.serialNumber,
-      manufacturer: port.manufacturer
-    })
-  );
-  return devices;
-});
-ipcMain.on("serial-connect", async (_, portPath) => {
-  if (currentPort && currentPort.isOpen) {
-    currentPort.removeAllListeners();
-    if (parser) parser.removeAllListeners();
-    await new Promise((resolve, reject) => {
-      currentPort.close((err) => {
-        if (err) {
-          console.error("Error closing port:", err);
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
+  currentPort.removeAllListeners();
+  if (parser) parser.removeAllListeners();
+  return new Promise((resolve, reject) => {
+    currentPort.close((err) => {
+      if (err) {
+        console.error("Error closing port:", err);
+        reject(err);
+      } else {
+        resolve();
+      }
     });
+  });
+}
+async function connectToPort(portPath) {
+  try {
+    await closeCurrentPort();
+  } catch (err) {
+    console.warn("Failed to close previous port:", err);
   }
   currentPort = new SerialPort({
     path: portPath,
@@ -215,10 +206,51 @@ ipcMain.on("serial-connect", async (_, portPath) => {
     win == null ? void 0 : win.webContents.send("serial-data", data);
   });
   currentPort.on("error", (err) => {
-    console.error("Serial Port Error: ", err.message);
+    console.error("Serial Port Error:", err.message);
+  });
+}
+app.whenReady().then(createWindow);
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") app.quit();
+});
+app.on("before-quit", async () => {
+  await closeCurrentPort();
+  dbOperations.close();
+});
+ipcMain.on("serial-write", (_, data) => {
+  if (!currentPort || !currentPort.isOpen) {
+    console.warn("Serial port not open");
+    return;
+  }
+  currentPort.write(Buffer.from(data + "\n", "ascii"), (err) => {
+    if (err) console.error("Serial write error:", err.message);
   });
 });
-ipcMain.handle("db-get-all-schedules", () => {
+ipcMain.handle("serial-devices", async () => {
+  try {
+    const ports = await SerialPort.list();
+    return ports.map((port) => ({
+      path: port.path,
+      serialNumber: port.serialNumber,
+      manufacturer: port.manufacturer
+    }));
+  } catch (err) {
+    console.error("Error listing serial devices:", err);
+    throw err;
+  }
+});
+ipcMain.on("serial-connect", async (_, portPath) => {
+  try {
+    await connectToPort(portPath);
+  } catch (err) {
+    console.error("Error connecting to port:", err);
+    win == null ? void 0 : win.webContents.send(
+      "serial-error",
+      err instanceof Error ? err.message : String(err)
+    );
+  }
+});
+ipcMain.handle("db-get-all-schedules", async () => {
   try {
     return dbOperations.getAllSchedules();
   } catch (error) {
@@ -226,7 +258,7 @@ ipcMain.handle("db-get-all-schedules", () => {
     throw error;
   }
 });
-ipcMain.handle("db-save-schedule", (_, schedule) => {
+ipcMain.handle("db-save-schedule", async (_, schedule) => {
   try {
     dbOperations.saveSchedule(schedule);
     return { success: true };
@@ -235,7 +267,7 @@ ipcMain.handle("db-save-schedule", (_, schedule) => {
     throw error;
   }
 });
-ipcMain.handle("db-delete-schedule", (_, id) => {
+ipcMain.handle("db-delete-schedule", async (_, id) => {
   try {
     dbOperations.deleteSchedule(id);
     return { success: true };

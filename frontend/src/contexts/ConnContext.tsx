@@ -1,3 +1,4 @@
+import { SERIAL_CONFIG } from "@/constants";
 import {
   createContext,
   useCallback,
@@ -25,7 +26,7 @@ export const ConnProvider = ({ children }: { children: ReactNode }) => {
   const connect = useCallback<ConnContextValue["connect"]>(async (port) => {
     try {
       window.serial.connectDevice(port);
-      await sleep(1500);
+      await sleep(SERIAL_CONFIG.CONNECTION_TIMEOUT_MS);
       setConnection(port);
     } catch (err) {
       console.error("Failed to connect:", err);

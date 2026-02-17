@@ -1,5 +1,4 @@
 /// <reference types="vite/client" />
-export {};
 
 import type { ScheduleData } from "./shared/types";
 
@@ -24,3 +23,5 @@ declare global {
     };
   }
 }
+
+export {};

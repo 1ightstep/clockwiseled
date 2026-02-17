@@ -1,6 +1,6 @@
 "use strict";
 const electron = require("electron");
-electron.contextBridge.exposeInMainWorld("serial", {
+const serialAPI = {
   write: (data) => {
     electron.ipcRenderer.send("serial-write", data);
   },
@@ -19,8 +19,8 @@ electron.contextBridge.exposeInMainWorld("serial", {
   connectDevice: (port) => {
     electron.ipcRenderer.send("serial-connect", port);
   }
-});
-electron.contextBridge.exposeInMainWorld("db", {
+};
+const databaseAPI = {
   getAllSchedules: () => {
     return electron.ipcRenderer.invoke("db-get-all-schedules");
   },
@@ -30,4 +30,6 @@ electron.contextBridge.exposeInMainWorld("db", {
   deleteSchedule: (id) => {
     return electron.ipcRenderer.invoke("db-delete-schedule", id);
   }
-});
+};
+electron.contextBridge.exposeInMainWorld("serial", serialAPI);
+electron.contextBridge.exposeInMainWorld("db", databaseAPI);

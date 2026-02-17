@@ -1,3 +1,4 @@
+import { DEFAULT_COLORS, UI } from "@/constants";
 import { useConn } from "@/hooks/useConn";
 import { Hash, MoveHorizontal, Palette, Send, Terminal, X } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -23,20 +24,20 @@ export function TinkerView({
     type: "ON",
     value: "0",
     side: "l",
-    color: { r: 149, g: 149, b: 216 },
+    color: { r: DEFAULT_COLORS.RGB.R, g: DEFAULT_COLORS.RGB.G, b: DEFAULT_COLORS.RGB.B },
   });
 
   const needsValue = useMemo(
     () => ["SET", "INC", "DEC"].includes(cmd.type),
-    [cmd.type]
+    [cmd.type],
   );
   const needsColor = useMemo(
     () => ["ON", "SET", "INC"].includes(cmd.type),
-    [cmd.type]
+    [cmd.type],
   );
   const needsSide = useMemo(
     () => ["INC", "DEC"].includes(cmd.type),
-    [cmd.type]
+    [cmd.type],
   );
 
   const formatCommand = () => {
@@ -67,21 +68,19 @@ export function TinkerView({
     <div className="tinker-fixed-overlay">
       <div className="tinker-container">
         <button className="exit-btn" onClick={onClose}>
-          <X size={20} />
+          <X size={UI.ICON_SIZES.LARGE} />
         </button>
 
         <div className="tinker-header">
           <div>
-            <h2
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-xs)",
-              }}
-            >
-              <Terminal size={24} color="var(--color-brand)" /> Tinker View
+            <h2 className="tinker-header-title">
+              <Terminal
+                size={UI.ICON_SIZES.XLARGE}
+                color="var(--color-brand)"
+              />{" "}
+              Tinker View
             </h2>
-            <p style={{ fontSize: "var(--text-xs)", opacity: 0.6 }}>
+            <p className="tinker-header-subtitle">
               Direct Hardware Command Interface
             </p>
           </div>
@@ -92,7 +91,7 @@ export function TinkerView({
             <div className="tinker-grid">
               <div className="tinker-field">
                 <label>
-                  <Terminal size={14} /> CMD
+                  <Terminal size={UI.ICON_SIZES.SMALL} /> CMD
                 </label>
                 <select
                   className="tinker-select"
@@ -113,7 +112,7 @@ export function TinkerView({
                 className={`tinker-field ${!needsValue ? "is-disabled" : ""}`}
               >
                 <label>
-                  <Hash size={14} /> {cmd.type === "SET" ? "INDEX" : "QTY"}
+                  <Hash size={UI.ICON_SIZES.SMALL} /> {cmd.type === "SET" ? "INDEX" : "QTY"}
                 </label>
                 <input
                   type="number"
@@ -128,7 +127,7 @@ export function TinkerView({
                 className={`tinker-field ${!needsSide ? "is-disabled" : ""}`}
               >
                 <label>
-                  <MoveHorizontal size={14} /> SIDE
+                  <MoveHorizontal size={UI.ICON_SIZES.SMALL} /> SIDE
                 </label>
                 <div className="tinker-toggle">
                   <button
@@ -152,7 +151,7 @@ export function TinkerView({
                 className={`tinker-field ${!needsColor ? "is-disabled" : ""}`}
               >
                 <label>
-                  <Palette size={14} /> RGB
+                  <Palette size={UI.ICON_SIZES.SMALL} /> RGB
                 </label>
                 <input
                   type="color"
@@ -175,20 +174,18 @@ export function TinkerView({
           </div>
         </div>
 
-        <footer className="tinker-footer ">
+        <footer className="tinker-footer">
           <button
-            className="btn-tinker-execute"
+            className="btn-tinker-execute btn-tinker-cancel"
             onClick={onClose}
-            style={{ background: "transparent", color: "var(--color-primary)" }}
           >
             Cancel
           </button>
           <button
             className="btn-tinker-execute btn-execute-glow"
-            style={{ display: "flex", alignItems: "center", gap: "8px" }}
             onClick={() => handleExecute()}
           >
-            <Send size={18} /> Execute
+            <Send size={UI.ICON_SIZES.MEDIUM} /> Execute
           </button>
         </footer>
       </div>

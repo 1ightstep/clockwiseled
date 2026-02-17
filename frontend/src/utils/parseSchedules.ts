@@ -11,13 +11,11 @@ export function parseSchedules(raw: string): Record<number, EventItem[]> {
     6: [],
   };
 
-  // Split by schedule headers, keep the number
   const scheduleRegex = /_SCHEDULE_(\d+)_:\s*/g;
 
   let match: RegExpExecArray | null;
   const indices: { day: number; start: number }[] = [];
 
-  // Collect all schedule header positions
   while ((match = scheduleRegex.exec(raw)) !== null) {
     indices.push({
       day: Number(match[1]),
@@ -25,7 +23,6 @@ export function parseSchedules(raw: string): Record<number, EventItem[]> {
     });
   }
 
-  // Parse each schedule block
   for (let i = 0; i < indices.length; i++) {
     const { day, start } = indices[i];
     const end =

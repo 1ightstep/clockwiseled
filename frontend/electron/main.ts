@@ -6,22 +6,22 @@ import { type DeviceType } from "./shared/type";
 import { dbOperations } from "./db";
 import { type ScheduleData } from "../src/shared/types";
 
-// Define global __filename and __dirname for native modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 (globalThis as any).__filename = __filename;
 (globalThis as any).__dirname = __dirname;
 
 const require = createRequire(import.meta.url);
-
 const { SerialPort } = require("serialport");
 const { ReadlineParser } = require("@serialport/parser-readline");
 
+type SerialPortInstance = InstanceType<typeof SerialPort>;
+
 let win: BrowserWindow | null = null;
-let currentPort: InstanceType<typeof SerialPort> | null = null;
+let currentPort: SerialPortInstance | null = null;
 let parser: any = null;
 
-function createWindow() {
+function createWindow(): void {
   win = new BrowserWindow({
     title: "Clockwise",
     icon: path.join(__dirname, "../public/Logo.png"),
@@ -33,48 +33,29 @@ function createWindow() {
   win.loadURL(process.env.VITE_DEV_SERVER_URL!);
 }
 
-app.whenReady().then(createWindow);
-
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
-});
-
-ipcMain.on("serial-write", (_, data: string) => {
+async function closeCurrentPort(): Promise<void> {
   if (!currentPort || !currentPort.isOpen) return;
-  currentPort.write(Buffer.from(data + "\n", "ascii"), (err: Error) => {
-    if (err) console.error("Serial write error:", err.message);
-  });
-});
 
-ipcMain.handle("serial-devices", async (): Promise<DeviceType[]> => {
-  const ports = await SerialPort.list();
+  currentPort.removeAllListeners();
+  if (parser) parser.removeAllListeners();
 
-  const devices: DeviceType[] = ports.map(
-    (port: InstanceType<typeof SerialPort>) => ({
-      path: port.path,
-      serialNumber: port.serialNumber,
-      manufacturer: port.manufacturer,
-    }),
-  );
-
-  return devices;
-});
-
-ipcMain.on("serial-connect", async (_, portPath: string) => {
-  if (currentPort && currentPort.isOpen) {
-    currentPort.removeAllListeners();
-    if (parser) parser.removeAllListeners();
-
-    await new Promise<void>((resolve, reject) => {
-      currentPort.close((err: Error) => {
-        if (err) {
-          console.error("Error closing port:", err);
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
+  return new Promise((resolve, reject) => {
+    currentPort!.close((err: Error | null) => {
+      if (err) {
+        console.error("Error closing port:", err);
+        reject(err);
+      } else {
+        resolve();
+      }
     });
+  });
+}
+
+async function connectToPort(portPath: string): Promise<void> {
+  try {
+    await closeCurrentPort();
+  } catch (err) {
+    console.warn("Failed to close previous port:", err);
   }
 
   currentPort = new SerialPort({
@@ -90,12 +71,59 @@ ipcMain.on("serial-connect", async (_, portPath: string) => {
   });
 
   currentPort.on("error", (err: Error) => {
-    console.error("Serial Port Error: ", err.message);
+    console.error("Serial Port Error:", err.message);
+  });
+}
+
+app.whenReady().then(createWindow);
+
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") app.quit();
+});
+
+app.on("before-quit", async () => {
+  await closeCurrentPort();
+  dbOperations.close();
+});
+
+ipcMain.on("serial-write", (_, data: string) => {
+  if (!currentPort || !currentPort.isOpen) {
+    console.warn("Serial port not open");
+    return;
+  }
+
+  currentPort.write(Buffer.from(data + "\n", "ascii"), (err: Error | null) => {
+    if (err) console.error("Serial write error:", err.message);
   });
 });
 
-// Database IPC handlers
-ipcMain.handle("db-get-all-schedules", () => {
+ipcMain.handle("serial-devices", async (): Promise<DeviceType[]> => {
+  try {
+    const ports = await SerialPort.list();
+    return ports.map((port: SerialPortInstance) => ({
+      path: port.path,
+      serialNumber: port.serialNumber,
+      manufacturer: port.manufacturer,
+    }));
+  } catch (err) {
+    console.error("Error listing serial devices:", err);
+    throw err;
+  }
+});
+
+ipcMain.on("serial-connect", async (_, portPath: string) => {
+  try {
+    await connectToPort(portPath);
+  } catch (err) {
+    console.error("Error connecting to port:", err);
+    win?.webContents.send(
+      "serial-error",
+      err instanceof Error ? err.message : String(err),
+    );
+  }
+});
+
+ipcMain.handle("db-get-all-schedules", async () => {
   try {
     return dbOperations.getAllSchedules();
   } catch (error) {
@@ -104,7 +132,7 @@ ipcMain.handle("db-get-all-schedules", () => {
   }
 });
 
-ipcMain.handle("db-save-schedule", (_, schedule: ScheduleData) => {
+ipcMain.handle("db-save-schedule", async (_, schedule: ScheduleData) => {
   try {
     dbOperations.saveSchedule(schedule);
     return { success: true };
@@ -114,7 +142,7 @@ ipcMain.handle("db-save-schedule", (_, schedule: ScheduleData) => {
   }
 });
 
-ipcMain.handle("db-delete-schedule", (_, id: string | number) => {
+ipcMain.handle("db-delete-schedule", async (_, id: string | number) => {
   try {
     dbOperations.deleteSchedule(id);
     return { success: true };

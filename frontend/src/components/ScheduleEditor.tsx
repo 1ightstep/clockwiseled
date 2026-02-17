@@ -1,3 +1,11 @@
+import {
+  DAYS,
+  DEFAULT_COLORS,
+  DEFAULT_EVENT,
+  TOAST_DURATION,
+  TOAST_TYPE,
+  UI,
+} from "@/constants";
 import { useToast } from "@/hooks/useToast";
 import { type EventItem, type ScheduleData } from "@/shared/types";
 import {
@@ -14,16 +22,6 @@ type ScheduleEditorProps = {
   onClose?: () => void;
 };
 
-const DAYS = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
-
 export function ScheduleEditor({
   initialData,
   onSave,
@@ -33,7 +31,7 @@ export function ScheduleEditor({
   const [description, setDescription] = useState(
     initialData?.description || "",
   );
-  const [day, setDay] = useState(initialData?.day || "Sunday");
+  const [day, setDay] = useState(initialData?.day || DAYS[0]);
   const [events, setEvents] = useState<EventItem[]>(initialData?.events || []);
   const { showToast } = useToast();
 
@@ -42,13 +40,13 @@ export function ScheduleEditor({
   const addEvent = () => {
     const newEvent: EventItem = {
       id: crypto.randomUUID(),
-      startH: 12,
-      startM: 0,
-      endH: 13,
-      endM: 0,
-      r: 149,
-      g: 149,
-      b: 216,
+      startH: DEFAULT_EVENT.START_HOUR,
+      startM: DEFAULT_EVENT.START_MINUTE,
+      endH: DEFAULT_EVENT.END_HOUR,
+      endM: DEFAULT_EVENT.END_MINUTE,
+      r: DEFAULT_COLORS.RGB.R,
+      g: DEFAULT_COLORS.RGB.G,
+      b: DEFAULT_COLORS.RGB.B,
     };
     setEvents([...events, newEvent]);
   };
@@ -78,7 +76,7 @@ export function ScheduleEditor({
     const isValidData: ValidationResult = getScheduleValidation(scheduleData);
 
     if (!isValidData.valid && isValidData.reason) {
-      showToast(isValidData.reason, 3000, "error");
+      showToast(isValidData.reason, TOAST_DURATION.NORMAL, TOAST_TYPE.ERROR);
       return;
     }
 
@@ -89,7 +87,7 @@ export function ScheduleEditor({
     <div className="editor-fixed-overlay">
       <div className="schedule-container">
         <button className="exit-btn" onClick={onClose}>
-          <X />
+          <X size={UI.ICON_SIZES.LARGE} />
         </button>
         <aside className="editor-sidebar">
           <div className="sidebar-header">
@@ -153,7 +151,11 @@ export function ScheduleEditor({
               <div
                 key={ev.id}
                 className="event-card"
-                style={{ borderLeftColor: `rgb(${ev.r}, ${ev.g}, ${ev.b})` }}
+                style={
+                  {
+                    "--event-color": `rgb(${ev.r}, ${ev.g}, ${ev.b})`,
+                  } as React.CSSProperties
+                }
               >
                 <div className="time-row">
                   <div className="time-block">
