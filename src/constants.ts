@@ -65,9 +65,9 @@ export const UI = {
 
 export const DEFAULT_COLORS = {
   RGB: {
-    R: 149,
-    G: 149,
-    B: 216,
+    R: 182,
+    G: 167,
+    B: 193,
   },
 } as const;
 

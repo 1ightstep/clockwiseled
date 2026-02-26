@@ -1,20 +1,21 @@
+import Logo from "@/assets/Logo.svg";
+import { ScheduleEditor } from "@/components/ScheduleEditor";
+import { ScheduleView } from "@/components/ScheduleView";
+import { SyncEditor } from "@/components/SyncEditor";
+import { TinkerView } from "@/components/TinkerView";
 import {
-  ARDUINO_COMMANDS,
+  DEFAULT_COLORS,
   DEVICE_CONFIG,
   TOAST_DURATION,
   TOAST_TYPE,
   UI,
 } from "@/constants";
-import { ScheduleEditor } from "@/components/ScheduleEditor";
-import { ScheduleView } from "@/components/ScheduleView";
-import { SyncEditor } from "@/components/SyncEditor";
-import { TinkerView } from "@/components/TinkerView";
 import { ConnProvider } from "@/contexts/ConnContext";
 import { useToast } from "@/hooks/useToast";
 import { type DeviceType, type ScheduleData } from "@/shared/types";
+import { formatOnCommand } from "@/utils/serialFormatter";
 import { Eye, Pen, Terminal, UploadCloud, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import Logo from "@/assets/Logo.svg";
 import "./DashboardPage.css";
 
 export function DashboardPage() {
@@ -125,10 +126,19 @@ export function DashboardPage() {
       });
     }, DEVICE_CONFIG.REFRESH_INTERVAL_MS);
 
-    window.serial.write(`${ARDUINO_COMMANDS.ON} 255 0 0\n`);
     return () => {
       clearInterval(intervalId);
     };
+  }, [showTinkerView]);
+
+  useEffect(() => {
+    window.serial.write(
+      formatOnCommand({
+        r: DEFAULT_COLORS.RGB.R,
+        g: DEFAULT_COLORS.RGB.G,
+        b: DEFAULT_COLORS.RGB.B,
+      }),
+    );
   }, []);
 
   return (

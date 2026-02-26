@@ -1,4 +1,4 @@
-import { ConnContext } from "@/contexts/ConnContext";
+import { ConnContext } from "@/contexts/ConnContextDef";
 import { useContext } from "react";
 
 export const useConn = () => {

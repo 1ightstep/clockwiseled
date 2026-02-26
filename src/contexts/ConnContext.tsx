@@ -1,21 +1,6 @@
 import { SERIAL_CONFIG } from "@/constants";
-import {
-  createContext,
-  useCallback,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
-
-type ConnContextValue = {
-  connection: string | undefined;
-  connect: (port: string) => Promise<void>;
-  listen: (handler: (data: string) => void) => () => void;
-};
-
-export const ConnContext = createContext<ConnContextValue | undefined>(
-  undefined
-);
+import { ConnContext, type ConnContextValue } from "@/contexts/ConnContextDef";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -40,7 +25,7 @@ export const ConnProvider = ({ children }: { children: ReactNode }) => {
 
   const value = useMemo<ConnContextValue>(
     () => ({ connection, connect, listen }),
-    [connection, connect, listen]
+    [connection, connect, listen],
   );
 
   return <ConnContext.Provider value={value}>{children}</ConnContext.Provider>;

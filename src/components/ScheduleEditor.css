@@ -44,12 +44,13 @@
 .exit-btn:hover {
   opacity: 1;
   background-color: var(--color-secondary);
+  color: var(--color-brand);
   transform: rotate(180deg);
 }
 
 .editor-sidebar {
-  background-color: var(--color-primary);
-  color: white;
+  background-color: var(--color-secondary);
+  color: var(--color-primary);
   padding: var(--space-lg);
   display: flex;
   flex-direction: column;
@@ -57,7 +58,7 @@
 }
 
 .editor-sidebar h3 {
-  color: white;
+  color: var(--color-primary);
   margin-bottom: var(--space-xs);
 }
 
@@ -91,9 +92,9 @@
 .editor-sidebar input,
 .editor-sidebar textarea,
 .editor-sidebar select {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--color-secondary);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--color-background);
+  color: var(--color-primary);
+  border-color: color(from var(--color-primary) srgb r g b / 0.1);
 }
 
 .editor-sidebar select option {
@@ -103,7 +104,7 @@
 .events-main input {
   background: var(--color-secondary);
   color: var(--color-primary);
-  border-color: #e2e2e7;
+  border-color: color(from var(--color-primary) srgb r g b / 0.1);
   text-align: center;
 }
 
@@ -117,21 +118,26 @@
 .btn-add {
   padding: var(--space-sm);
   background: transparent;
-  border: 1px dashed rgba(255, 255, 255, 0.3);
-  color: white;
+  border: 1px dashed color(from var(--color-primary) srgb r g b / 0.3);
+  color: var(--color-primary);
   border-radius: var(--radius-md);
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-add:hover {
+  color: var(--color-brand);
+  border-color: var(--color-brand);
 }
 
 .btn-save {
   padding: var(--space-sm);
-  background: var(--color-brand);
-  color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-background);
   border: none;
   border-radius: var(--radius-md);
   font-weight: 700;
   cursor: pointer;
-  color: white;
   transition: transform 0.2s;
 }
 
@@ -154,7 +160,7 @@
 }
 
 .event-card {
-  background: white;
+  background: var(--color-background);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: var(--space-md);
@@ -205,5 +211,5 @@
 }
 
 .ev-delete-btn:hover {
-  background: rgba(221, 151, 142, 0.1);
+  background: color(from var(--color-error) srgb r g b / 0.1);
 }

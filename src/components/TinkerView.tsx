@@ -1,10 +1,19 @@
-import { DEFAULT_COLORS, UI } from "@/constants";
+import { ARDUINO_COMMANDS, DEFAULT_COLORS, UI } from "@/constants";
 import { useConn } from "@/hooks/useConn";
+import { formatTinkerCommand } from "@/utils/serialFormatter";
 import { Hash, MoveHorizontal, Palette, Send, Terminal, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import "./TinkerView.css";
 
-type CommandType = "ON" | "OFF" | "SET" | "INC" | "DEC";
+const COMMAND_TYPES = [
+  ARDUINO_COMMANDS.ON,
+  ARDUINO_COMMANDS.OFF,
+  ARDUINO_COMMANDS.SET,
+  ARDUINO_COMMANDS.INC,
+  ARDUINO_COMMANDS.DEC,
+] as const;
+
+type CommandType = (typeof COMMAND_TYPES)[number];
 
 interface CommandState {
   type: CommandType;
@@ -12,6 +21,23 @@ interface CommandState {
   side: "l" | "r";
   color: { r: number; g: number; b: number };
 }
+
+const NEEDS_VALUE_TYPES: CommandType[] = [
+  ARDUINO_COMMANDS.SET,
+  ARDUINO_COMMANDS.INC,
+  ARDUINO_COMMANDS.DEC,
+];
+
+const NEEDS_COLOR_TYPES: CommandType[] = [
+  ARDUINO_COMMANDS.ON,
+  ARDUINO_COMMANDS.SET,
+  ARDUINO_COMMANDS.INC,
+];
+
+const NEEDS_SIDE_TYPES: CommandType[] = [
+  ARDUINO_COMMANDS.INC,
+  ARDUINO_COMMANDS.DEC,
+];
 
 export function TinkerView({
   port,
@@ -21,39 +47,34 @@ export function TinkerView({
   onClose: () => void;
 }) {
   const [cmd, setCmd] = useState<CommandState>({
-    type: "ON",
+    type: ARDUINO_COMMANDS.ON,
     value: "0",
     side: "l",
-    color: { r: DEFAULT_COLORS.RGB.R, g: DEFAULT_COLORS.RGB.G, b: DEFAULT_COLORS.RGB.B },
+    color: {
+      r: DEFAULT_COLORS.RGB.R,
+      g: DEFAULT_COLORS.RGB.G,
+      b: DEFAULT_COLORS.RGB.B,
+    },
   });
 
   const needsValue = useMemo(
-    () => ["SET", "INC", "DEC"].includes(cmd.type),
+    () => NEEDS_VALUE_TYPES.includes(cmd.type),
     [cmd.type],
   );
   const needsColor = useMemo(
-    () => ["ON", "SET", "INC"].includes(cmd.type),
+    () => NEEDS_COLOR_TYPES.includes(cmd.type),
     [cmd.type],
   );
   const needsSide = useMemo(
-    () => ["INC", "DEC"].includes(cmd.type),
+    () => NEEDS_SIDE_TYPES.includes(cmd.type),
     [cmd.type],
   );
 
-  const formatCommand = () => {
-    const { type, value, side, color } = cmd;
-    if (type === "OFF") return "OFF";
-    if (type === "ON") return `ON ${color.r} ${color.g} ${color.b}`;
-    if (type === "SET") return `SET ${value} ${color.r} ${color.g} ${color.b}`;
-    if (type === "INC")
-      return `INC ${value} ${side} ${color.r} ${color.g} ${color.b}`;
-    if (type === "DEC") return `DEC ${value} ${side}`;
-    return "";
-  };
+  const formattedCommand = useMemo(() => formatTinkerCommand(cmd), [cmd]);
 
   const { connection, connect } = useConn();
   const handleExecute = (overrideCmd?: string) => {
-    const finalString = overrideCmd || formatCommand();
+    const finalString = overrideCmd || formattedCommand;
 
     const connectAndWrite = async (port: string, data: string) => {
       if (!connection || connection !== port) {
@@ -100,11 +121,11 @@ export function TinkerView({
                     setCmd({ ...cmd, type: e.target.value as CommandType })
                   }
                 >
-                  <option value="ON">ON</option>
-                  <option value="OFF">OFF</option>
-                  <option value="SET">SET</option>
-                  <option value="INC">INC</option>
-                  <option value="DEC">DEC</option>
+                  {COMMAND_TYPES.map((commandType) => (
+                    <option key={commandType} value={commandType}>
+                      {commandType}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -112,7 +133,8 @@ export function TinkerView({
                 className={`tinker-field ${!needsValue ? "is-disabled" : ""}`}
               >
                 <label>
-                  <Hash size={UI.ICON_SIZES.SMALL} /> {cmd.type === "SET" ? "INDEX" : "QTY"}
+                  <Hash size={UI.ICON_SIZES.SMALL} />{" "}
+                  {cmd.type === ARDUINO_COMMANDS.SET ? "INDEX" : "QTY"}
                 </label>
                 <input
                   type="number"
@@ -169,7 +191,7 @@ export function TinkerView({
 
             <div className="tinker-terminal">
               <span className="terminal-label">BUFFER</span>
-              <code>Raw Code: {formatCommand()}</code>
+              <code>Raw Code: {formattedCommand}</code>
             </div>
           </div>
         </div>

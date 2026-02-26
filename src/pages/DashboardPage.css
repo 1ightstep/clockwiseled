@@ -77,11 +77,13 @@
 }
 
 .add-schedule-card {
-  transition: transform 0.2s;
+  transition: all 0.2s;
 }
 
 .add-schedule-card:hover {
   transform: scale(1.01);
+  color: var(--color-brand);
+  border-color: var(--color-brand);
 }
 
 .schedule-day {
@@ -128,7 +130,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s;
+  transition: all 0.2s;
 }
 
 .edit-schedule-btn {
@@ -136,11 +138,18 @@
 }
 
 .del-schedule-btn:hover {
-  transform: scale(1.1);
+  background-color: var(--color-secondary);
+  color: var(--color-brand);
+  transform: rotate(180deg);
 }
 
 .edit-schedule-btn:hover {
   transform: rotate(360deg);
+}
+
+.del-schedule-btn:hover,
+.edit-schedule-btn:hover {
+  color: var(--color-brand);
 }
 
 .devices-list {
@@ -184,9 +193,7 @@
   cursor: pointer;
   padding: var(--space-xs);
   border-radius: 100%;
-  transition:
-    box-shadow 0.2s,
-    transform 0.2s;
+  transition: all 0.2s;
   opacity: 0.9;
   display: flex;
   align-items: center;
@@ -198,6 +205,8 @@
     rgba(17, 17, 26, 0.05) 0px 1px 0px,
     rgba(17, 17, 26, 0.1) 0px 0px 8px;
   transform: scale(1.05);
+  color: var(--color-brand);
+  border-color: var(--color-brand);
 }
 
 .device-refresh-btn {

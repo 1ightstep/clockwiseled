@@ -96,7 +96,6 @@
 }
 
 .btn-sync:hover {
-  background: #252535;
   transform: translateY(-1px);
   box-shadow: 0 10px 20px color(from var(--color-primary) srgb r g b / 0.2);
 }

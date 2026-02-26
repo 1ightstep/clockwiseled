@@ -64,7 +64,7 @@
 .tinker-color-swatch {
   height: 44px;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(25, 25, 35, 0.1);
+  border: 1px solid color(from var(--color-brand) srgb r g b / 0.1);
   padding: 0 var(--space-sm);
   background: white;
   font-size: var(--text-sm);
@@ -208,7 +208,6 @@
 }
 
 .btn-tinker-execute:hover {
-  background: #252535;
   transform: translateY(-1px);
   box-shadow: 0 10px 20px color(from var(--color-primary) srgb r g b / 0.2);
 }

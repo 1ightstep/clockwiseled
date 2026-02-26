@@ -40,7 +40,7 @@ export function parseSchedules(raw: string): Record<number, EventItem[]> {
     let e: RegExpExecArray | null;
 
     while ((e = eventRegex.exec(block)) !== null) {
-      const [_, eventIndex, startH, startM, endH, endM, r, g, b] = e;
+      const [, eventIndex, startH, startM, endH, endM, r, g, b] = e;
 
       result[day].push({
         id: `D${day}-E${eventIndex}`,

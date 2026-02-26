@@ -1,13 +1,17 @@
 import Database from "better-sqlite3";
+import { app } from "electron";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { app } from "electron";
 import { type ScheduleData } from "../src/shared/types";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-(globalThis as any).__filename = __filename;
-(globalThis as any).__dirname = __dirname;
+const runtimePaths = globalThis as typeof globalThis & {
+  __filename?: string;
+  __dirname?: string;
+};
+runtimePaths.__filename = __filename;
+runtimePaths.__dirname = __dirname;
 
 type DbStatement = {
   insertSchedule: Database.Statement;

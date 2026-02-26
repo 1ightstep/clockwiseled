@@ -2,24 +2,32 @@ import { app, BrowserWindow, ipcMain } from "electron";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { type DeviceType } from "./shared/type";
-import { dbOperations } from "./db";
 import { type ScheduleData } from "../src/shared/types";
+import { dbOperations } from "./db";
+import { type DeviceType } from "./shared/type";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-(globalThis as any).__filename = __filename;
-(globalThis as any).__dirname = __dirname;
+const runtimePaths = globalThis as typeof globalThis & {
+  __filename?: string;
+  __dirname?: string;
+};
+runtimePaths.__filename = __filename;
+runtimePaths.__dirname = __dirname;
 
 const require = createRequire(import.meta.url);
 const { SerialPort } = require("serialport");
 const { ReadlineParser } = require("@serialport/parser-readline");
 
 type SerialPortInstance = InstanceType<typeof SerialPort>;
+type SerialDataParser = {
+  on: (event: "data", listener: (data: string) => void) => void;
+  removeAllListeners: () => void;
+};
 
 let win: BrowserWindow | null = null;
 let currentPort: SerialPortInstance | null = null;
-let parser: any = null;
+let parser: SerialDataParser | null = null;
 
 function createWindow(): void {
   win = new BrowserWindow({
@@ -64,7 +72,9 @@ async function connectToPort(portPath: string): Promise<void> {
     autoOpen: true,
   });
 
-  parser = currentPort.pipe(new ReadlineParser({ delimiter: "\n" }));
+  parser = currentPort.pipe(
+    new ReadlineParser({ delimiter: "\n" }),
+  ) as SerialDataParser;
 
   parser.on("data", (data: string) => {
     win?.webContents.send("serial-data", data);

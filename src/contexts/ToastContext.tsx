@@ -1,31 +1,10 @@
 import { TOAST_DURATION, TOAST_TYPE } from "@/constants";
 import {
-  createContext,
-  useCallback,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
-
-export type ToastType = {
-  message: string;
-  duration: number;
-  type: "success" | "error" | "info";
-};
-
-export type ToastContextValue = {
-  toast: ToastType | null;
-  showToast: (
-    message: string,
-    duration?: number,
-    type?: ToastType["type"]
-  ) => void;
-  hideToast: () => void;
-};
-
-export const ToastContext = createContext<ToastContextValue | undefined>(
-  undefined
-);
+  ToastContext,
+  type ToastContextValue,
+  type ToastType,
+} from "@/contexts/ToastContextDef";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 
 export const ToastProvider = ({ children }: { children: ReactNode }) => {
   const [toast, setToast] = useState<ToastType | null>(null);
@@ -34,7 +13,7 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
     (message, duration = TOAST_DURATION.NORMAL, type = TOAST_TYPE.INFO) => {
       setToast({ message, duration, type });
     },
-    []
+    [],
   );
 
   const hideToast = useCallback(() => {
@@ -43,7 +22,7 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
 
   const value = useMemo<ToastContextValue>(
     () => ({ toast, showToast, hideToast }),
-    [toast, showToast, hideToast]
+    [toast, showToast, hideToast],
   );
 
   return (

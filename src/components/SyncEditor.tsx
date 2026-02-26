@@ -9,6 +9,12 @@ import {
 } from "@/constants";
 import { useToast } from "@/hooks/useToast";
 import { type ScheduleData } from "@/shared/types";
+import {
+  formatEndUploadCommand,
+  formatEventCommand,
+  formatUploadCommand,
+  sendCommandSequence,
+} from "@/utils/serialFormatter";
 import { UploadCloud, X } from "lucide-react";
 import { useState } from "react";
 import "./SyncEditor.css";
@@ -36,32 +42,20 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
     Object.entries(assignment).forEach(([day, schedule]) => {
       const dayIndex: number = DAY_INDEX[day as keyof typeof DAY_INDEX];
 
-      commands.push(`UPLOAD ${dayIndex}`);
+      commands.push(formatUploadCommand(dayIndex));
 
       const sortedEvents = [...schedule.events].sort(
         (a, b) => a.startH * 60 + a.startM - (b.startH * 60 + b.startM),
       );
 
       sortedEvents.forEach((event) => {
-        commands.push(
-          `CONT_UPLOAD ${event.startH} ${event.startM} ${event.endH} ${event.endM} ${event.r} ${event.g} ${event.b}`,
-        );
+        commands.push(formatEventCommand(event));
       });
 
-      commands.push("END_UPLOAD");
+      commands.push(formatEndUploadCommand());
     });
 
     return commands;
-  };
-
-  const sendCommandsToDevice = async (commands: string[]) => {
-    const delay = (ms: number) =>
-      new Promise((resolve) => setTimeout(resolve, ms));
-
-    for (const command of commands) {
-      window.serial.write(command);
-      await delay(SERIAL_CONFIG.COMMAND_SEND_DELAY_MS);
-    }
   };
 
   const validateAndUpload = async () => {
@@ -88,7 +82,7 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
     try {
       setIsUploading(true);
       const commands = generateUploadCommands(finalData);
-      await sendCommandsToDevice(commands);
+      await sendCommandSequence(commands, SERIAL_CONFIG.COMMAND_SEND_DELAY_MS);
 
       onSync(finalData);
       showToast(
@@ -118,7 +112,11 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
         <div className="sync-header">
           <div>
             <h2 className="sync-header-title">
-              <UploadCloud size={UI.ICON_SIZES.XLARGE} color="var(--color-brand)" /> Device Sync
+              <UploadCloud
+                size={UI.ICON_SIZES.XLARGE}
+                color="var(--color-brand)"
+              />{" "}
+              Device Sync
             </h2>
             <p className="sync-header-subtitle">
               Assign a schedule to each day of the week.
@@ -158,9 +156,11 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
                     className="preview-card"
                     style={
                       {
-                        "--event-color": `rgb(${selectedSchedule.events[0]?.r || DEFAULT_COLORS.RGB.R
-                          }, ${selectedSchedule.events[0]?.g || DEFAULT_COLORS.RGB.G}, ${selectedSchedule.events[0]?.b || DEFAULT_COLORS.RGB.B
-                          })`,
+                        "--event-color": `rgb(${
+                          selectedSchedule.events[0]?.r || DEFAULT_COLORS.RGB.R
+                        }, ${selectedSchedule.events[0]?.g || DEFAULT_COLORS.RGB.G}, ${
+                          selectedSchedule.events[0]?.b || DEFAULT_COLORS.RGB.B
+                        })`,
                       } as React.CSSProperties
                     }
                   >
@@ -177,7 +177,7 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
 
         <footer className="sync-footer">
           <button
-            className="btn-sync btn-sync-cancel"
+            className="btn-sync btn-sync-cancel no-brand-icon-hover"
             onClick={onClose}
             disabled={isUploading}
           >
@@ -185,7 +185,7 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
           </button>
 
           <button
-            className="btn-sync btn-sync-primary"
+            className="btn-sync btn-sync-primary no-brand-icon-hover"
             onClick={validateAndUpload}
             disabled={isUploading}
           >

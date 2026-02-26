@@ -5,8 +5,9 @@ import { fileURLToPath } from "node:url";
 import Database from "better-sqlite3";
 const __filename$2 = fileURLToPath(import.meta.url);
 const __dirname$2 = path.dirname(__filename$2);
-globalThis.__filename = __filename$2;
-globalThis.__dirname = __dirname$2;
+const runtimePaths$1 = globalThis;
+runtimePaths$1.__filename = __filename$2;
+runtimePaths$1.__dirname = __dirname$2;
 let db = null;
 let stmts = null;
 function initializeStatements(database) {
@@ -157,8 +158,9 @@ app.on("before-quit", () => {
 });
 const __filename$1 = fileURLToPath(import.meta.url);
 const __dirname$1 = path.dirname(__filename$1);
-globalThis.__filename = __filename$1;
-globalThis.__dirname = __dirname$1;
+const runtimePaths = globalThis;
+runtimePaths.__filename = __filename$1;
+runtimePaths.__dirname = __dirname$1;
 const require$1 = createRequire(import.meta.url);
 const { SerialPort } = require$1("serialport");
 const { ReadlineParser } = require$1("@serialport/parser-readline");
@@ -201,7 +203,9 @@ async function connectToPort(portPath) {
     baudRate: 9600,
     autoOpen: true
   });
-  parser = currentPort.pipe(new ReadlineParser({ delimiter: "\n" }));
+  parser = currentPort.pipe(
+    new ReadlineParser({ delimiter: "\n" })
+  );
   parser.on("data", (data) => {
     win == null ? void 0 : win.webContents.send("serial-data", data);
   });
