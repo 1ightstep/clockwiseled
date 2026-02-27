@@ -38,7 +38,11 @@ function createWindow(): void {
     },
   });
 
-  win.loadURL(process.env.VITE_DEV_SERVER_URL!);
+  if (process.env.VITE_DEV_SERVER_URL) {
+    win.loadURL(process.env.VITE_DEV_SERVER_URL);
+  } else {
+    win.loadFile(path.join(__dirname, "../dist/index.html"));
+  }
 }
 
 async function closeCurrentPort(): Promise<void> {

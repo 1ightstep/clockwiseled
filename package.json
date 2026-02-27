@@ -12,11 +12,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@serialport/parser-readline": "^13.0.0",
     "better-sqlite3": "^12.6.2",
     "lucide-react": "^0.344.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-router-dom": "^7.9.6"
+    "react-router-dom": "^7.9.6",
+    "serialport": "^13.0.0"
   },
   "devDependencies": {
     "@electron/rebuild": "^4.0.3",
