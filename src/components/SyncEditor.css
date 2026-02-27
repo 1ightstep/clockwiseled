@@ -22,7 +22,7 @@
   box-shadow: var(--shadow-xl);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
   padding: var(--space-xl);
   gap: var(--space-lg);
 }
