@@ -30,18 +30,25 @@ let currentPort: SerialPortInstance | null = null;
 let parser: SerialDataParser | null = null;
 
 function createWindow(): void {
+  const appPath = app.getAppPath();
+  const isDev = !!process.env.VITE_DEV_SERVER_URL;
+
   win = new BrowserWindow({
     title: "Clockwise",
-    icon: path.join(__dirname, "../public/Logo.png"),
+    icon: isDev
+      ? path.join(__dirname, "../public/Logo.png")
+      : path.join(appPath, "dist-electron/../public/Logo.png"),
     webPreferences: {
-      preload: path.join(__dirname, "preload.mjs"),
+      preload: isDev
+        ? path.join(__dirname, "preload.mjs")
+        : path.join(appPath, "dist-electron/preload.mjs"),
     },
   });
 
-  if (process.env.VITE_DEV_SERVER_URL) {
-    win.loadURL(process.env.VITE_DEV_SERVER_URL);
+  if (isDev) {
+    win.loadURL(process.env.VITE_DEV_SERVER_URL!);
   } else {
-    win.loadFile(path.join(__dirname, "../dist/index.html"));
+    win.loadFile(path.join(appPath, "dist/index.html"));
   }
 }
 
