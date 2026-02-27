@@ -3,6 +3,7 @@ import { createContext } from "react";
 export type ConnContextValue = {
   connection: string | undefined;
   connect: (port: string) => Promise<void>;
+  disconnect: () => void;
   listen: (handler: (data: string) => void) => () => void;
 };
 

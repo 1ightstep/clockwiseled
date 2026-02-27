@@ -12,6 +12,7 @@ import { type ScheduleData } from "@/shared/types";
 import {
   formatEndUploadCommand,
   formatEventCommand,
+  formatSetClockCommand,
   formatUploadCommand,
   sendCommandSequence,
 } from "@/utils/serialFormatter";
@@ -82,6 +83,7 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
     try {
       setIsUploading(true);
       const commands = generateUploadCommands(finalData);
+      commands.push(formatSetClockCommand());
       await sendCommandSequence(commands, SERIAL_CONFIG.COMMAND_SEND_DELAY_MS);
 
       onSync(finalData);

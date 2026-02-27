@@ -211,6 +211,14 @@ async function connectToPort(portPath) {
   });
   currentPort.on("error", (err) => {
     console.error("Serial Port Error:", err.message);
+    win == null ? void 0 : win.webContents.send("serial-disconnect");
+    currentPort = null;
+    parser = null;
+  });
+  currentPort.on("close", () => {
+    win == null ? void 0 : win.webContents.send("serial-disconnect");
+    currentPort = null;
+    parser = null;
   });
 }
 app.whenReady().then(createWindow);

@@ -13,6 +13,7 @@ declare global {
     serial: {
       write: (data: string) => void;
       onData: (callback: (data: string) => void) => () => void;
+      onDisconnect: (callback: () => void) => () => void;
       getDevices: () => Promise<DeviceType[]>;
       connectDevice: (port: string) => void;
     };

@@ -11,8 +11,7 @@
 
 .tinker-container {
   position: relative;
-  width: auto;
-  max-width: fit-content;
+  width: 680px;
   max-height: 85vh;
   background: var(--color-background);
   border-radius: var(--radius-2xl);
@@ -131,26 +130,92 @@
   box-shadow: none;
 }
 
-.tinker-terminal {
+.tinker-terminal-wrapper {
   margin-top: var(--space-lg);
+  position: relative;
+}
+
+.tinker-terminal {
   background: var(--color-primary);
   color: var(--color-brand);
   padding: var(--space-lg);
+  padding-top: var(--space-xl);
   border-radius: var(--radius-lg);
-  position: relative;
   font-family: "JetBrains Mono", "Fira Code", monospace;
   border: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+  height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.tinker-terminal::-webkit-scrollbar {
+  width: 5px;
+  border-radius: var(--radius-md);
+}
+
+.tinker-terminal::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: var(--radius-md);
+}
+
+.tinker-terminal::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md);
+}
+
+.tinker-terminal::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .terminal-label {
   position: absolute;
   top: var(--gap-xs);
   right: var(--gap-sm);
+  z-index: 1;
   font-size: 9px;
   opacity: 0.3;
   letter-spacing: 1px;
   color: white;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.terminal-clear-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  opacity: 0.5;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  transition: opacity 0.2s;
+}
+
+.terminal-clear-btn:hover {
+  opacity: 1;
+}
+
+.terminal-placeholder {
+  font-size: var(--text-sm);
+  opacity: 0.3;
+  font-style: italic;
+}
+
+.terminal-line code {
+  font-size: var(--text-sm);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.terminal-sent code {
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .tinker-terminal code {

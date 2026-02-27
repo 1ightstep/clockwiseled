@@ -82,6 +82,15 @@ async function connectToPort(portPath: string): Promise<void> {
 
   currentPort.on("error", (err: Error) => {
     console.error("Serial Port Error:", err.message);
+    win?.webContents.send("serial-disconnect");
+    currentPort = null;
+    parser = null;
+  });
+
+  currentPort.on("close", () => {
+    win?.webContents.send("serial-disconnect");
+    currentPort = null;
+    parser = null;
   });
 }
 

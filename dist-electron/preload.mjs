@@ -18,6 +18,13 @@ const serialAPI = {
   },
   connectDevice: (port) => {
     electron.ipcRenderer.send("serial-connect", port);
+  },
+  onDisconnect: (callback) => {
+    const listener = () => callback();
+    electron.ipcRenderer.on("serial-disconnect", listener);
+    return () => {
+      electron.ipcRenderer.removeListener("serial-disconnect", listener);
+    };
   }
 };
 const databaseAPI = {

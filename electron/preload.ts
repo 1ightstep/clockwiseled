@@ -1,10 +1,11 @@
 import { contextBridge, ipcRenderer } from "electron";
-import { type DeviceType } from "./shared/type";
 import { type ScheduleData } from "../src/shared/types";
+import { type DeviceType } from "./shared/type";
 
 type SerialAPI = {
   write: (data: string) => void;
   onData: (callback: (data: string) => void) => () => void;
+  onDisconnect: (callback: () => void) => () => void;
   getDevices: () => Promise<DeviceType[]>;
   connectDevice: (port: string) => void;
 };
@@ -38,6 +39,14 @@ const serialAPI: SerialAPI = {
 
   connectDevice: (port: string) => {
     ipcRenderer.send("serial-connect", port);
+  },
+
+  onDisconnect: (callback: () => void) => {
+    const listener = () => callback();
+    ipcRenderer.on("serial-disconnect", listener);
+    return () => {
+      ipcRenderer.removeListener("serial-disconnect", listener);
+    };
   },
 };
 

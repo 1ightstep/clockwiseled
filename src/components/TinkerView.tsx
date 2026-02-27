@@ -1,16 +1,36 @@
-import { ARDUINO_COMMANDS, DEFAULT_COLORS, UI } from "@/constants";
+import {
+  ARDUINO_COMMANDS,
+  DEFAULT_COLORS,
+  DEVICE_CONFIG,
+  TOAST_DURATION,
+  TOAST_TYPE,
+  UI,
+} from "@/constants";
 import { useConn } from "@/hooks/useConn";
+import { useToast } from "@/hooks/useToast";
 import { formatTinkerCommand } from "@/utils/serialFormatter";
-import { Hash, MoveHorizontal, Palette, Send, Terminal, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import {
+  Hash,
+  MoveHorizontal,
+  Palette,
+  Send,
+  Terminal,
+  Trash2,
+  X,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./TinkerView.css";
 
 const COMMAND_TYPES = [
+  ARDUINO_COMMANDS.SET_MAX_LEDS,
+  ARDUINO_COMMANDS.SET_CLOCK,
   ARDUINO_COMMANDS.ON,
   ARDUINO_COMMANDS.OFF,
   ARDUINO_COMMANDS.SET,
   ARDUINO_COMMANDS.INC,
   ARDUINO_COMMANDS.DEC,
+  ARDUINO_COMMANDS.STATUS,
+  ARDUINO_COMMANDS.GET_SCHEDULE,
 ] as const;
 
 type CommandType = (typeof COMMAND_TYPES)[number];
@@ -26,6 +46,8 @@ const NEEDS_VALUE_TYPES: CommandType[] = [
   ARDUINO_COMMANDS.SET,
   ARDUINO_COMMANDS.INC,
   ARDUINO_COMMANDS.DEC,
+  ARDUINO_COMMANDS.SET_MAX_LEDS,
+  ARDUINO_COMMANDS.GET_SCHEDULE,
 ];
 
 const NEEDS_COLOR_TYPES: CommandType[] = [
@@ -56,6 +78,9 @@ export function TinkerView({
       b: DEFAULT_COLORS.RGB.B,
     },
   });
+  const [output, setOutput] = useState<string[]>([]);
+  const outputRef = useRef<HTMLDivElement>(null);
+  const { showToast } = useToast();
 
   const needsValue = useMemo(
     () => NEEDS_VALUE_TYPES.includes(cmd.type),
@@ -72,14 +97,52 @@ export function TinkerView({
 
   const formattedCommand = useMemo(() => formatTinkerCommand(cmd), [cmd]);
 
-  const { connection, connect } = useConn();
+  const { connection, connect, listen } = useConn();
+
+  const appendOutput = useCallback((text: string) => {
+    const lines = text.split("\n").filter((l) => l.trim());
+    if (lines.length > 0) {
+      setOutput((prev) => [...prev, ...lines]);
+    }
+  }, []);
+
+  useEffect(() => {
+    const cleanup = listen(appendOutput);
+    return cleanup;
+  }, [listen, appendOutput]);
+
+  useEffect(() => {
+    if (outputRef.current) {
+      outputRef.current.scrollTop = outputRef.current.scrollHeight;
+    }
+  }, [output]);
+
+  const handleClearOutput = () => setOutput([]);
   const handleExecute = (overrideCmd?: string) => {
+    if (cmd.type === ARDUINO_COMMANDS.SET_MAX_LEDS) {
+      const count = Number(cmd.value);
+      if (
+        isNaN(count) ||
+        !Number.isInteger(count) ||
+        count < DEVICE_CONFIG.MIN_LEDS ||
+        count > DEVICE_CONFIG.MAX_LEDS
+      ) {
+        showToast(
+          `LED count must be a whole number between ${DEVICE_CONFIG.MIN_LEDS} and ${DEVICE_CONFIG.MAX_LEDS}.`,
+          TOAST_DURATION.NORMAL,
+          TOAST_TYPE.ERROR,
+        );
+        return;
+      }
+    }
+
     const finalString = overrideCmd || formattedCommand;
 
     const connectAndWrite = async (port: string, data: string) => {
       if (!connection || connection !== port) {
         await connect(port);
       }
+      setOutput((prev) => [...prev, `> ${data}`]);
       window.serial.write(data);
     };
     connectAndWrite(port, finalString);
@@ -134,7 +197,13 @@ export function TinkerView({
               >
                 <label>
                   <Hash size={UI.ICON_SIZES.SMALL} />{" "}
-                  {cmd.type === ARDUINO_COMMANDS.SET ? "INDEX" : "QTY"}
+                  {cmd.type === ARDUINO_COMMANDS.SET
+                    ? "INDEX"
+                    : cmd.type === ARDUINO_COMMANDS.SET_MAX_LEDS
+                      ? "LEDS"
+                      : cmd.type === ARDUINO_COMMANDS.GET_SCHEDULE
+                        ? "DAY"
+                        : "QTY"}
                 </label>
                 <input
                   type="number"
@@ -189,9 +258,35 @@ export function TinkerView({
               </div>
             </div>
 
-            <div className="tinker-terminal">
-              <span className="terminal-label">BUFFER</span>
-              <code>Raw Code: {formattedCommand}</code>
+            <div className="tinker-terminal-wrapper">
+              <span className="terminal-label">
+                OUTPUT
+                {output.length > 0 && (
+                  <button
+                    className="terminal-clear-btn"
+                    onClick={handleClearOutput}
+                    title="Clear output"
+                  >
+                    <Trash2 size={UI.ICON_SIZES.SMALL} />
+                  </button>
+                )}
+              </span>
+              <div className="tinker-terminal" ref={outputRef}>
+                {output.length === 0 ? (
+                  <span className="terminal-placeholder">
+                    Awaiting response...
+                  </span>
+                ) : (
+                  output.map((line, i) => (
+                    <div
+                      key={i}
+                      className={`terminal-line ${line.startsWith(">") ? "terminal-sent" : ""}`}
+                    >
+                      <code>{line}</code>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         </div>

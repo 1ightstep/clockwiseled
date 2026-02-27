@@ -13,7 +13,11 @@ type TinkerCommandInput = {
     | typeof ARDUINO_COMMANDS.OFF
     | typeof ARDUINO_COMMANDS.SET
     | typeof ARDUINO_COMMANDS.INC
-    | typeof ARDUINO_COMMANDS.DEC;
+    | typeof ARDUINO_COMMANDS.DEC
+    | typeof ARDUINO_COMMANDS.SET_MAX_LEDS
+    | typeof ARDUINO_COMMANDS.SET_CLOCK
+    | typeof ARDUINO_COMMANDS.STATUS
+    | typeof ARDUINO_COMMANDS.GET_SCHEDULE;
   value: string;
   side: "l" | "r";
   color: RgbColor;
@@ -27,6 +31,10 @@ export function formatSetClockCommand(): string {
   const seconds = now.getSeconds();
 
   return `${ARDUINO_COMMANDS.SET_CLOCK} ${dayOfWeek} ${hours} ${minutes} ${seconds}`;
+}
+
+export function formatSetMaxLedsCommand(count: number): string {
+  return `${ARDUINO_COMMANDS.SET_MAX_LEDS} ${count}`;
 }
 
 export function formatUploadCommand(dayIndex: number): string {
@@ -73,6 +81,12 @@ export function formatTinkerCommand(input: TinkerCommandInput): string {
   if (type === ARDUINO_COMMANDS.SET) return formatSetCommand(value, color);
   if (type === ARDUINO_COMMANDS.INC)
     return formatIncCommand(value, side, color);
+  if (type === ARDUINO_COMMANDS.SET_MAX_LEDS)
+    return formatSetMaxLedsCommand(Number(value));
+  if (type === ARDUINO_COMMANDS.SET_CLOCK) return formatSetClockCommand();
+  if (type === ARDUINO_COMMANDS.STATUS) return ARDUINO_COMMANDS.STATUS;
+  if (type === ARDUINO_COMMANDS.GET_SCHEDULE)
+    return `${ARDUINO_COMMANDS.GET_SCHEDULE} ${value}`;
   return formatDecCommand(value, side);
 }
 
