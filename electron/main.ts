@@ -116,14 +116,19 @@ app.on("before-quit", async () => {
   dbOperations.close();
 });
 
-ipcMain.on("serial-write", (_, data: string) => {
+ipcMain.handle("serial-write", async (_, data: string) => {
   if (!currentPort || !currentPort.isOpen) {
-    console.warn("Serial port not open");
-    return;
+    throw new Error("Serial port not open");
   }
 
-  currentPort.write(Buffer.from(data + "\n", "ascii"), (err: Error | null) => {
-    if (err) console.error("Serial write error:", err.message);
+  return new Promise<void>((resolve, reject) => {
+    currentPort!.write(
+      Buffer.from(data + "\n", "ascii"),
+      (err: Error | null) => {
+        if (err) reject(err);
+        else resolve();
+      },
+    );
   });
 });
 
@@ -141,15 +146,13 @@ ipcMain.handle("serial-devices", async (): Promise<DeviceType[]> => {
   }
 });
 
-ipcMain.on("serial-connect", async (_, portPath: string) => {
+ipcMain.handle("serial-connect", async (_, portPath: string) => {
   try {
     await connectToPort(portPath);
+    return { success: true };
   } catch (err) {
     console.error("Error connecting to port:", err);
-    win?.webContents.send(
-      "serial-error",
-      err instanceof Error ? err.message : String(err),
-    );
+    throw err;
   }
 });
 

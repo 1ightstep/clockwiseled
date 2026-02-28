@@ -3,11 +3,21 @@
   $schema: "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
   appId: "com.lightsteps.clockwise",
   asar: true,
+  asarUnpack: [
+    "node_modules/better-sqlite3/**",
+    "node_modules/serialport/**",
+    "node_modules/@serialport/**",
+    "node_modules/bindings/**",
+    "node_modules/file-uri-to-path/**",
+    "node_modules/node-addon-api/**",
+    "node_modules/prebuild-install/**",
+    "node_modules/node-gyp-build/**",
+  ],
   productName: "Clockwise",
   directories: {
     output: "release/${version}",
   },
-  files: ["dist", "dist-electron"],
+  files: ["dist", "dist-electron", "node_modules/**/*", "public/**/*"],
   mac: {
     target: ["dmg"],
     artifactName: "${productName}-Mac-${version}-Installer.${ext}",

@@ -139,11 +139,21 @@ export function TinkerView({
     const finalString = overrideCmd || formattedCommand;
 
     const connectAndWrite = async (port: string, data: string) => {
-      if (!connection || connection !== port) {
-        await connect(port);
+      try {
+        if (!connection || connection !== port) {
+          await connect(port);
+        }
+        setOutput((prev) => [...prev, `> ${data}`]);
+        await window.serial.write(data);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Unknown error";
+        setOutput((prev) => [...prev, `[ERROR] ${msg}`]);
+        showToast(
+          `Command failed: ${msg}`,
+          TOAST_DURATION.NORMAL,
+          TOAST_TYPE.ERROR,
+        );
       }
-      setOutput((prev) => [...prev, `> ${data}`]);
-      window.serial.write(data);
     };
     connectAndWrite(port, finalString);
   };

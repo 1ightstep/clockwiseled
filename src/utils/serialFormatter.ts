@@ -53,6 +53,10 @@ export function formatOnCommand(color: RgbColor): string {
   return `${ARDUINO_COMMANDS.ON} ${color.r} ${color.g} ${color.b}`;
 }
 
+export function formatGetAllSchedulesCommand(): string {
+  return ARDUINO_COMMANDS.GET_ALL_SCHEDULES;
+}
+
 export function formatOffCommand(): string {
   return ARDUINO_COMMANDS.OFF;
 }
@@ -133,7 +137,7 @@ export async function sendCommandSequence(
   delayMs: number = SERIAL_CONFIG.COMMAND_DELAY_MS,
 ): Promise<void> {
   for (const command of commands) {
-    window.serial.write(command);
+    await window.serial.write(command);
     await new Promise((resolve) => setTimeout(resolve, delayMs));
   }
 }

@@ -106,6 +106,11 @@ export function DashboardPage() {
         setSchedules(savedSchedules);
       } catch (error) {
         console.error("Failed to load schedules:", error);
+        showToast(
+          "Failed to load schedules from database.",
+          TOAST_DURATION.LONG,
+          TOAST_TYPE.ERROR,
+        );
       }
     };
 
@@ -132,13 +137,17 @@ export function DashboardPage() {
   }, [showTinkerView]);
 
   useEffect(() => {
-    window.serial.write(
-      formatOnCommand({
-        r: DEFAULT_COLORS.RGB.R,
-        g: DEFAULT_COLORS.RGB.G,
-        b: DEFAULT_COLORS.RGB.B,
-      }),
-    );
+    window.serial
+      .write(
+        formatOnCommand({
+          r: DEFAULT_COLORS.RGB.R,
+          g: DEFAULT_COLORS.RGB.G,
+          b: DEFAULT_COLORS.RGB.B,
+        }),
+      )
+      .catch(() => {
+        // Silent on startup — no device connected is expected
+      });
   }, []);
 
   return (

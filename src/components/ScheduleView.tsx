@@ -1,9 +1,17 @@
-import { DAYS, UI } from "@/constants";
+import {
+  DAYS,
+  SERIAL_CONFIG,
+  TOAST_DURATION,
+  TOAST_TYPE,
+  UI,
+} from "@/constants";
 import { useConn } from "@/hooks/useConn";
+import { useToast } from "@/hooks/useToast";
 import { type EventItem } from "@/shared/types";
 import { parseSchedules } from "@/utils/parseSchedules";
+import { formatGetAllSchedulesCommand } from "@/utils/serialFormatter";
 import { Calendar, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "./ScheduleView.css";
 
 type ScheduleViewProps = {
@@ -16,47 +24,41 @@ type ScheduleListType = Record<number, EventItem[]>;
 export function ScheduleView({ port, onClose }: ScheduleViewProps) {
   const [activeSchedules, setActiveSchedules] = useState<ScheduleListType>({});
   const currentScheduleOutput = useRef<string>("");
+  const { showToast } = useToast();
 
-  const handleSchedules = (raw: string) => {
+  const handleSchedules = useCallback((raw: string) => {
     currentScheduleOutput.current += raw;
     if (raw.includes("_END_")) {
       setActiveSchedules(parseSchedules(currentScheduleOutput.current));
       currentScheduleOutput.current = "";
     }
-  };
+  }, []);
 
   const { connection, connect, listen } = useConn();
-  const hasRanOnce = useRef(false);
 
   useEffect(() => {
-    if (hasRanOnce.current) return;
-    hasRanOnce.current = true;
+    const cleanup = listen(handleSchedules);
 
-    const setup = async () => {
+    (async () => {
       try {
         if (!connection || connection !== port) {
           await connect(port);
-          await new Promise((resolve) => setTimeout(resolve, 500));
+          await new Promise((r) =>
+            setTimeout(r, SERIAL_CONFIG.CONNECTION_TIMEOUT_MS),
+          );
         }
-
-        const cleanup = listen(handleSchedules);
-        window.serial.write("GET_ALL_SCHEDULES");
-
-        return cleanup;
+        await window.serial.write(formatGetAllSchedulesCommand());
       } catch (err) {
-        console.error("ScheduleView setup error:", err);
+        showToast(
+          `Failed to read schedules: ${err instanceof Error ? err.message : "Connection error"}`,
+          TOAST_DURATION.LONG,
+          TOAST_TYPE.ERROR,
+        );
       }
-    };
+    })();
 
-    let cleanup: (() => void) | undefined;
-    setup().then((c) => {
-      cleanup = c;
-    });
-
-    return () => {
-      if (cleanup) cleanup();
-    };
-  }, [connection, connect, listen, port]);
+    return cleanup;
+  }, [connect, connection, listen, port, showToast, handleSchedules]);
 
   return (
     <div className="view-fixed-overlay">

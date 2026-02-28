@@ -3,11 +3,11 @@ import { type ScheduleData } from "../src/shared/types";
 import { type DeviceType } from "./shared/type";
 
 type SerialAPI = {
-  write: (data: string) => void;
+  write: (data: string) => Promise<void>;
   onData: (callback: (data: string) => void) => () => void;
   onDisconnect: (callback: () => void) => () => void;
   getDevices: () => Promise<DeviceType[]>;
-  connectDevice: (port: string) => void;
+  connectDevice: (port: string) => Promise<{ success: boolean }>;
 };
 
 type DatabaseAPI = {
@@ -18,7 +18,7 @@ type DatabaseAPI = {
 
 const serialAPI: SerialAPI = {
   write: (data: string) => {
-    ipcRenderer.send("serial-write", data);
+    return ipcRenderer.invoke("serial-write", data);
   },
 
   onData: (callback: (data: string) => void) => {
@@ -38,7 +38,7 @@ const serialAPI: SerialAPI = {
   },
 
   connectDevice: (port: string) => {
-    ipcRenderer.send("serial-connect", port);
+    return ipcRenderer.invoke("serial-connect", port);
   },
 
   onDisconnect: (callback: () => void) => {

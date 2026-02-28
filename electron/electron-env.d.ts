@@ -12,11 +12,11 @@ declare namespace NodeJS {
 
 interface Window {
   serial: {
-    write: (data: string) => void;
+    write: (data: string) => Promise<void>;
     onData: (callback: (data: string) => void) => () => void;
     onDisconnect: (callback: () => void) => () => void;
     getDevices: () => Promise<DeviceType[]>;
-    connectDevice: (port: string) => void;
+    connectDevice: (port: string) => Promise<{ success: boolean }>;
   };
   db: {
     getAllSchedules: () => Promise<ScheduleData[]>;
