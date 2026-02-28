@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import { createRequire } from "node:module";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import url, { fileURLToPath } from "node:url";
 import { type ScheduleData } from "../src/shared/types";
 import { dbOperations } from "./db";
 import { type DeviceType } from "./shared/type";
@@ -51,7 +51,13 @@ function createWindow(): void {
   if (isDev) {
     win.loadURL(process.env.VITE_DEV_SERVER_URL!);
   } else {
-    win.loadFile(path.join(__dirname, "../dist/index.html"));
+    win.loadURL(
+      url.format({
+        pathname: path.join(__dirname, "../dist/index.html"),
+        protocol: "file:",
+        slashes: true,
+      }),
+    );
   }
 }
 
