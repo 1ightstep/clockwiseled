@@ -1,10 +1,4 @@
-import {
-  DAYS,
-  SERIAL_CONFIG,
-  TOAST_DURATION,
-  TOAST_TYPE,
-  UI,
-} from "@/constants";
+import { DAYS, TOAST_DURATION, TOAST_TYPE, UI } from "@/constants";
 import { useConn } from "@/hooks/useConn";
 import { useToast } from "@/hooks/useToast";
 import { type EventItem } from "@/shared/types";
@@ -43,9 +37,6 @@ export function ScheduleView({ port, onClose }: ScheduleViewProps) {
       try {
         if (!connection || connection !== port) {
           await connect(port);
-          await new Promise((r) =>
-            setTimeout(r, SERIAL_CONFIG.CONNECTION_TIMEOUT_MS),
-          );
         }
         await window.serial.write(formatGetAllSchedulesCommand());
       } catch (err) {

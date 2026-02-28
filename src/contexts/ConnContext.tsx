@@ -1,4 +1,6 @@
+import { SERIAL_CONFIG } from "@/constants";
 import { ConnContext, type ConnContextValue } from "@/contexts/ConnContextDef";
+import { formatSetClockCommand } from "@/utils/serialFormatter";
 import {
   useCallback,
   useEffect,
@@ -14,6 +16,12 @@ export const ConnProvider = ({ children }: { children: ReactNode }) => {
     try {
       await window.serial.connectDevice(port);
       setConnection(port);
+
+      await new Promise((resolve) =>
+        setTimeout(resolve, SERIAL_CONFIG.ARDUINO_BOOT_DELAY_MS),
+      );
+
+      await window.serial.write(formatSetClockCommand());
     } catch (err) {
       setConnection(undefined);
       throw err;
