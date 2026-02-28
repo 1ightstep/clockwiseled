@@ -128,7 +128,7 @@ export function TinkerView({
         count > DEVICE_CONFIG.MAX_LEDS
       ) {
         showToast(
-          `LED count must be a whole number between ${DEVICE_CONFIG.MIN_LEDS} and ${DEVICE_CONFIG.MAX_LEDS}.`,
+          `Please enter a number between ${DEVICE_CONFIG.MIN_LEDS} and ${DEVICE_CONFIG.MAX_LEDS} for the LED count.`,
           TOAST_DURATION.NORMAL,
           TOAST_TYPE.ERROR,
         );
@@ -146,10 +146,10 @@ export function TinkerView({
         setOutput((prev) => [...prev, `> ${data}`]);
         await window.serial.write(data);
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "Unknown error";
-        setOutput((prev) => [...prev, `[ERROR] ${msg}`]);
+        const msg = err instanceof Error ? err.message : "Something went wrong";
+        setOutput((prev) => [...prev, `⚠ ${msg}`]);
         showToast(
-          `Command failed: ${msg}`,
+          "Couldn't send the command to the clock. Please check the connection.",
           TOAST_DURATION.NORMAL,
           TOAST_TYPE.ERROR,
         );

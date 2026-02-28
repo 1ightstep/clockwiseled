@@ -29,7 +29,9 @@ export const ConnProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const disconnect = useCallback(() => {
-    setConnection(undefined);
+    window.serial.onDisconnect(() => {
+      setConnection(undefined);
+    });
   }, []);
 
   useEffect(() => {

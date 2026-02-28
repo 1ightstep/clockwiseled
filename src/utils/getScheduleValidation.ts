@@ -13,7 +13,10 @@ export function getScheduleValidation(
   if (!schedule.day) return { valid: false, reason: "Please select a day" };
 
   if (!schedule.events || schedule.events.length === 0) {
-    return { valid: false, reason: "Schedule must have at least one event" };
+    return {
+      valid: false,
+      reason: "Please add at least one event to the schedule",
+    };
   }
 
   const sorted = [...schedule.events].sort(
@@ -26,16 +29,22 @@ export function getScheduleValidation(
     const eventNum = i + 1;
 
     if ([r, g, b].some((v) => v < 0 || v > 255)) {
-      return { valid: false, reason: `Event ${eventNum}: RGB must be 0-255` };
+      return {
+        valid: false,
+        reason: `Event ${eventNum}: Color values must be between 0 and 255`,
+      };
     }
 
     if (startH < 0 || startH > 23 || endH < 0 || endH > 23) {
-      return { valid: false, reason: `Event ${eventNum}: Hours must be 0-23` };
+      return {
+        valid: false,
+        reason: `Event ${eventNum}: Please use valid hours (0-23)`,
+      };
     }
     if (startM < 0 || startM > 59 || endM < 0 || endM > 59) {
       return {
         valid: false,
-        reason: `Event ${eventNum}: Minutes must be 0-59`,
+        reason: `Event ${eventNum}: Please use valid minutes (0-59)`,
       };
     }
 
@@ -44,7 +53,7 @@ export function getScheduleValidation(
     if (endTotal <= startTotal) {
       return {
         valid: false,
-        reason: `Event ${eventNum}: End must be after start`,
+        reason: `Event ${eventNum}: End time must be after start time`,
       };
     }
 
@@ -53,7 +62,7 @@ export function getScheduleValidation(
       if (endTotal > nextStart) {
         return {
           valid: false,
-          reason: `Event ${eventNum} overlaps with next event`,
+          reason: `Event ${eventNum} overlaps with the next event. Please adjust the times.`,
         };
       }
     }

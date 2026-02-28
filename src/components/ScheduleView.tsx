@@ -41,7 +41,7 @@ export function ScheduleView({ port, onClose }: ScheduleViewProps) {
         await window.serial.write(formatGetAllSchedulesCommand());
       } catch (err) {
         showToast(
-          `Failed to read schedules: ${err instanceof Error ? err.message : "Connection error"}`,
+          "Couldn't read schedules from the clock. Please check the connection and try again.",
           TOAST_DURATION.LONG,
           TOAST_TYPE.ERROR,
         );
@@ -49,7 +49,7 @@ export function ScheduleView({ port, onClose }: ScheduleViewProps) {
     })();
 
     return cleanup;
-  }, [connect, connection, listen, port, showToast, handleSchedules]);
+  }, []);
 
   return (
     <div className="view-fixed-overlay">

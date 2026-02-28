@@ -95,7 +95,7 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
       onClose();
     } catch (error) {
       showToast(
-        `Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        "Couldn't sync schedules to the clock. Please check the connection and try again.",
         TOAST_DURATION.LONG,
         TOAST_TYPE.ERROR,
       );

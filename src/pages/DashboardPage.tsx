@@ -62,7 +62,7 @@ export function DashboardPage() {
     } catch (error) {
       console.error("Failed to save schedule:", error);
       showToast(
-        `Failed to save schedule: ${error instanceof Error ? error.message : "Unknown error"}`,
+        "Couldn't save your schedule. Please try again.",
         TOAST_DURATION.LONG,
         TOAST_TYPE.ERROR,
       );
@@ -83,7 +83,7 @@ export function DashboardPage() {
     } catch (error) {
       console.error("Failed to delete schedule:", error);
       showToast(
-        `Failed to delete schedule: ${error instanceof Error ? error.message : "Unknown error"}`,
+        "Couldn't delete the schedule. Please try again.",
         TOAST_DURATION.LONG,
         TOAST_TYPE.ERROR,
       );
@@ -107,7 +107,7 @@ export function DashboardPage() {
       } catch (error) {
         console.error("Failed to load schedules:", error);
         showToast(
-          "Failed to load schedules from database.",
+          "Couldn't load your saved schedules. Please restart the app.",
           TOAST_DURATION.LONG,
           TOAST_TYPE.ERROR,
         );
