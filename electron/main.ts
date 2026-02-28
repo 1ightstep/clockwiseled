@@ -39,6 +39,9 @@ function createWindow(): void {
       ? path.join(__dirname, "../public/Logo.png")
       : path.join(appPath, "dist-electron/../public/Logo.png"),
     webPreferences: {
+      nodeIntegration: false,
+      sandbox: true,
+      contextIsolation: true,
       preload: isDev
         ? path.join(__dirname, "preload.mjs")
         : path.join(appPath, "dist-electron/preload.mjs"),
@@ -48,7 +51,7 @@ function createWindow(): void {
   if (isDev) {
     win.loadURL(process.env.VITE_DEV_SERVER_URL!);
   } else {
-    win.loadFile(path.join(appPath, "dist/index.html"));
+    win.loadFile(path.join(__dirname, "../dist/index.html"));
   }
 }
 
