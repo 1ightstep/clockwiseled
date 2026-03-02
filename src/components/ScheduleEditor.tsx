@@ -67,16 +67,6 @@ export function ScheduleEditor({
     setEvents([...events, newEvent]);
   };
 
-  const updateEvent = (
-    id: string | number,
-    field: keyof EventItem,
-    value: number,
-  ) => {
-    setEvents(
-      events.map((ev) => (ev.id === id ? { ...ev, [field]: value } : ev)),
-    );
-  };
-
   const removeEvent = (id: string | number) => {
     setEvents(events.filter((ev) => ev.id !== id));
   };
