@@ -161,8 +161,9 @@ export function DashboardPage() {
           />
         )}
 
-        {showSyncEditor && (
+        {showSyncEditor && currDevice && (
           <SyncEditor
+            port={currDevice.path}
             onSync={handleOnSync}
             schedules={schedules}
             onClose={() => setShowSyncEditor(false)}
@@ -252,7 +253,10 @@ export function DashboardPage() {
                 <div className="device-btn-container">
                   <button
                     className="device-btn"
-                    onClick={() => setShowSyncEditor(true)}
+                    onClick={() => {
+                      setCurrDevice(device);
+                      setShowSyncEditor(true);
+                    }}
                   >
                     <UploadCloud />
                   </button>

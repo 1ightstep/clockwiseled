@@ -7,6 +7,7 @@ import {
   TOAST_TYPE,
   UI,
 } from "@/constants";
+import { useConn } from "@/hooks/useConn";
 import { useToast } from "@/hooks/useToast";
 import { type ScheduleData } from "@/shared/types";
 import {
@@ -17,19 +18,46 @@ import {
   sendCommandSequence,
 } from "@/utils/serialFormatter";
 import { UploadCloud, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./SyncEditor.css";
 
 type DeviceSyncProps = {
+  port: string;
   schedules: ScheduleData[] | undefined;
   onSync: (assignment: Record<string, ScheduleData>) => void;
   onClose: () => void;
 };
 
-export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
+export function SyncEditor({
+  port,
+  schedules,
+  onSync,
+  onClose,
+}: DeviceSyncProps) {
   const { showToast } = useToast();
+  const { connection, connect } = useConn();
   const [assignments, setAssignments] = useState<Record<string, string>>({});
   const [isUploading, setIsUploading] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      if (!connection || connection !== port) {
+        try {
+          setIsConnecting(true);
+          await connect(port);
+        } catch {
+          showToast(
+            "Couldn't connect to the device. Please check the connection and try again.",
+            TOAST_DURATION.LONG,
+            TOAST_TYPE.ERROR,
+          );
+        } finally {
+          setIsConnecting(false);
+        }
+      }
+    })();
+  }, []);
 
   const handleSelect = (day: string, scheduleId: string) => {
     setAssignments((prev) => ({ ...prev, [day]: scheduleId }));
@@ -189,10 +217,14 @@ export function SyncEditor({ schedules, onSync, onClose }: DeviceSyncProps) {
           <button
             className="btn-sync btn-sync-primary no-brand-icon-hover"
             onClick={validateAndUpload}
-            disabled={isUploading}
+            disabled={isUploading || isConnecting}
           >
             <UploadCloud size={UI.ICON_SIZES.MEDIUM} />
-            {isUploading ? "Uploading..." : "Sync"}
+            {isConnecting
+              ? "Connecting..."
+              : isUploading
+                ? "Uploading..."
+                : "Sync"}
           </button>
         </footer>
       </div>
