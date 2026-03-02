@@ -16,6 +16,14 @@ import { X } from "lucide-react";
 import { useState } from "react";
 import "./ScheduleEditor.css";
 
+const rgbToHex = (r: number, g: number, b: number): string =>
+  `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+
+const hexToRgb = (hex: string) => {
+  const n = parseInt(hex.slice(1), 16);
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+};
+
 type ScheduleEditorProps = {
   initialData?: ScheduleData;
   onSave: (data: ScheduleData, isEditMode: boolean) => void;
@@ -208,7 +216,20 @@ export function ScheduleEditor({
                   </div>
                 </div>
                 <div className="color-row">
-                  <label>Color (RGB)</label>
+                  <label>Color</label>
+                  <input
+                    type="color"
+                    className="color-picker"
+                    value={rgbToHex(ev.r, ev.g, ev.b)}
+                    onChange={(e) => {
+                      const { r, g, b } = hexToRgb(e.target.value);
+                      setEvents(
+                        events.map((item) =>
+                          item.id === ev.id ? { ...item, r, g, b } : item,
+                        ),
+                      );
+                    }}
+                  />
                   <div className="rgb-inputs">
                     <input
                       type="number"

@@ -1,1 +1,42 @@
-"use strict";const e=require("electron"),t={write:r=>e.ipcRenderer.invoke("serial-write",r),onData:r=>{const n=(s,i)=>{r(i)};return e.ipcRenderer.on("serial-data",n),()=>{e.ipcRenderer.removeListener("serial-data",n)}},getDevices:()=>e.ipcRenderer.invoke("serial-devices"),connectDevice:r=>e.ipcRenderer.invoke("serial-connect",r),onDisconnect:r=>{const n=()=>r();return e.ipcRenderer.on("serial-disconnect",n),()=>{e.ipcRenderer.removeListener("serial-disconnect",n)}}},c={getAllSchedules:()=>e.ipcRenderer.invoke("db-get-all-schedules"),saveSchedule:r=>e.ipcRenderer.invoke("db-save-schedule",r),deleteSchedule:r=>e.ipcRenderer.invoke("db-delete-schedule",r)};e.contextBridge.exposeInMainWorld("serial",t);e.contextBridge.exposeInMainWorld("db",c);
+"use strict";
+const electron = require("electron");
+const serialAPI = {
+  write: (data) => {
+    return electron.ipcRenderer.invoke("serial-write", data);
+  },
+  onData: (callback) => {
+    const listener = (_, data) => {
+      callback(data);
+    };
+    electron.ipcRenderer.on("serial-data", listener);
+    return () => {
+      electron.ipcRenderer.removeListener("serial-data", listener);
+    };
+  },
+  getDevices: () => {
+    return electron.ipcRenderer.invoke("serial-devices");
+  },
+  connectDevice: (port) => {
+    return electron.ipcRenderer.invoke("serial-connect", port);
+  },
+  onDisconnect: (callback) => {
+    const listener = () => callback();
+    electron.ipcRenderer.on("serial-disconnect", listener);
+    return () => {
+      electron.ipcRenderer.removeListener("serial-disconnect", listener);
+    };
+  }
+};
+const databaseAPI = {
+  getAllSchedules: () => {
+    return electron.ipcRenderer.invoke("db-get-all-schedules");
+  },
+  saveSchedule: (schedule) => {
+    return electron.ipcRenderer.invoke("db-save-schedule", schedule);
+  },
+  deleteSchedule: (id) => {
+    return electron.ipcRenderer.invoke("db-delete-schedule", id);
+  }
+};
+electron.contextBridge.exposeInMainWorld("serial", serialAPI);
+electron.contextBridge.exposeInMainWorld("db", databaseAPI);

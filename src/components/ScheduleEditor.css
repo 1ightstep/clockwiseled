@@ -187,6 +187,28 @@
   width: 5rem !important;
 }
 
+.color-picker {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 36px;
+  height: 36px;
+  border: 2px solid color(from var(--color-primary) srgb r g b / 0.15);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  padding: 0;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.color-picker::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+.color-picker::-webkit-color-swatch {
+  border: none;
+  border-radius: calc(var(--radius-sm) - 2px);
+}
+
 .time-block div {
   display: flex;
   align-items: center;
