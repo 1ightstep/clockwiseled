@@ -8,6 +8,8 @@ import { Calendar, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./ScheduleView.css";
 
+const PARSE_DEBOUNCE_MS = 1000;
+
 type ScheduleViewProps = {
   port: string;
   onClose: () => void;
@@ -18,15 +20,31 @@ type ScheduleListType = Record<number, EventItem[]>;
 export function ScheduleView({ port, onClose }: ScheduleViewProps) {
   const [activeSchedules, setActiveSchedules] = useState<ScheduleListType>({});
   const currentScheduleOutput = useRef<string>("");
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { showToast } = useToast();
 
-  const handleSchedules = useCallback((raw: string) => {
-    currentScheduleOutput.current += raw;
-    if (raw.includes("_END_")) {
-      setActiveSchedules(parseSchedules(currentScheduleOutput.current));
+  const triggerParse = useCallback(() => {
+    const buffer = currentScheduleOutput.current;
+    if (buffer.includes("_SCHEDULE_")) {
+      setActiveSchedules(parseSchedules(buffer));
       currentScheduleOutput.current = "";
     }
   }, []);
+
+  const handleSchedules = useCallback(
+    (raw: string) => {
+      currentScheduleOutput.current += raw + "\n";
+
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+      if (raw.includes("_END_")) {
+        triggerParse();
+      } else {
+        debounceTimer.current = setTimeout(triggerParse, PARSE_DEBOUNCE_MS);
+      }
+    },
+    [triggerParse],
+  );
 
   const { connection, connect, listen } = useConn();
 
@@ -48,7 +66,10 @@ export function ScheduleView({ port, onClose }: ScheduleViewProps) {
       }
     })();
 
-    return cleanup;
+    return () => {
+      cleanup();
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
   }, []);
 
   return (
