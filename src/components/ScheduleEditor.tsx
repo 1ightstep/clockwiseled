@@ -24,6 +24,14 @@ const hexToRgb = (hex: string) => {
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
 };
 
+const toTimeStr = (h: number, m: number): string =>
+  `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+
+const parseTimeStr = (val: string) => {
+  const [h, m] = val.split(":").map(Number);
+  return { h, m };
+};
+
 type ScheduleEditorProps = {
   initialData?: ScheduleData;
   onSave: (data: ScheduleData, isEditMode: boolean) => void;
@@ -168,51 +176,39 @@ export function ScheduleEditor({
                 <div className="time-row">
                   <div className="time-block">
                     <label>Start</label>
-                    <div className="time-inputs">
-                      <input
-                        type="number"
-                        min="0"
-                        max="23"
-                        value={ev.startH}
-                        onChange={(e) =>
-                          updateEvent(ev.id, "startH", +e.target.value)
-                        }
-                      />
-                      :
-                      <input
-                        type="number"
-                        min="0"
-                        max="59"
-                        value={ev.startM}
-                        onChange={(e) =>
-                          updateEvent(ev.id, "startM", +e.target.value)
-                        }
-                      />
-                    </div>
+                    <input
+                      type="time"
+                      className="time-input"
+                      value={toTimeStr(ev.startH, ev.startM)}
+                      onChange={(e) => {
+                        const { h, m } = parseTimeStr(e.target.value);
+                        setEvents(
+                          events.map((item) =>
+                            item.id === ev.id
+                              ? { ...item, startH: h, startM: m }
+                              : item,
+                          ),
+                        );
+                      }}
+                    />
                   </div>
                   <div className="time-block">
                     <label>End</label>
-                    <div className="time-inputs">
-                      <input
-                        type="number"
-                        min="0"
-                        max="23"
-                        value={ev.endH}
-                        onChange={(e) =>
-                          updateEvent(ev.id, "endH", +e.target.value)
-                        }
-                      />
-                      :
-                      <input
-                        type="number"
-                        min="0"
-                        max="59"
-                        value={ev.endM}
-                        onChange={(e) =>
-                          updateEvent(ev.id, "endM", +e.target.value)
-                        }
-                      />
-                    </div>
+                    <input
+                      type="time"
+                      className="time-input"
+                      value={toTimeStr(ev.endH, ev.endM)}
+                      onChange={(e) => {
+                        const { h, m } = parseTimeStr(e.target.value);
+                        setEvents(
+                          events.map((item) =>
+                            item.id === ev.id
+                              ? { ...item, endH: h, endM: m }
+                              : item,
+                          ),
+                        );
+                      }}
+                    />
                   </div>
                 </div>
                 <div className="color-row">
@@ -230,29 +226,6 @@ export function ScheduleEditor({
                       );
                     }}
                   />
-                  <div className="rgb-inputs">
-                    <input
-                      type="number"
-                      min="0"
-                      max="255"
-                      value={ev.r}
-                      onChange={(e) => updateEvent(ev.id, "r", +e.target.value)}
-                    />
-                    <input
-                      type="number"
-                      min="0"
-                      max="255"
-                      value={ev.g}
-                      onChange={(e) => updateEvent(ev.id, "g", +e.target.value)}
-                    />
-                    <input
-                      type="number"
-                      min="0"
-                      max="255"
-                      value={ev.b}
-                      onChange={(e) => updateEvent(ev.id, "b", +e.target.value)}
-                    />
-                  </div>
 
                   <button
                     className="ev-delete-btn"

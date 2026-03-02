@@ -178,13 +178,10 @@
   align-items: center;
 }
 
-.rgb-inputs {
+.time-block {
   display: flex;
-  gap: var(--space-xs);
-}
-
-.rgb-inputs input {
-  width: 5rem !important;
+  flex-direction: column;
+  gap: var(--space-2xs);
 }
 
 .color-picker {
@@ -209,14 +206,10 @@
   border-radius: calc(var(--radius-sm) - 2px);
 }
 
-.time-block div {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.events-main input[type="number"] {
-  width: 60px;
+.time-input {
+  width: auto !important;
+  text-align: left !important;
+  cursor: text;
 }
 
 .ev-delete-btn {
