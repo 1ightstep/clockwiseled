@@ -156,7 +156,10 @@ export function DashboardPage() {
         {showEditor && (
           <ScheduleEditor
             onSave={handleOnScheduleSave}
-            onClose={() => setShowEditor(false)}
+            onClose={() => {
+              setScheduleData(undefined);
+              setShowEditor(false);
+            }}
             initialData={scheduleData}
           />
         )}
@@ -228,7 +231,10 @@ export function DashboardPage() {
             ))}
           <article
             className="add-schedule-card"
-            onClick={() => setShowEditor(true)}
+            onClick={() => {
+              setScheduleData(undefined);
+              setShowEditor(true);
+            }}
           >
             +
           </article>

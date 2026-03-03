@@ -26,7 +26,14 @@ export function ScheduleView({ port, onClose }: ScheduleViewProps) {
   const triggerParse = useCallback(() => {
     const buffer = currentScheduleOutput.current;
     if (buffer.includes("_SCHEDULE_")) {
-      setActiveSchedules(parseSchedules(buffer));
+      const parsed = parseSchedules(buffer);
+      const sorted: ScheduleListType = {};
+      for (const [day, events] of Object.entries(parsed)) {
+        sorted[Number(day)] = [...events].sort(
+          (a, b) => a.startH * 60 + a.startM - (b.startH * 60 + b.startM),
+        );
+      }
+      setActiveSchedules(sorted);
       currentScheduleOutput.current = "";
     }
   }, []);

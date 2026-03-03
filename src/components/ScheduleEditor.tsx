@@ -48,7 +48,11 @@ export function ScheduleEditor({
     initialData?.description || "",
   );
   const [day, setDay] = useState(initialData?.day || DAYS[0]);
-  const [events, setEvents] = useState<EventItem[]>(initialData?.events || []);
+  const [events, setEvents] = useState<EventItem[]>(
+    [...(initialData?.events || [])].sort(
+      (a, b) => a.startH * 60 + a.startM - (b.startH * 60 + b.startM),
+    ),
+  );
   const { showToast } = useToast();
 
   const isEditMode = !!initialData;
