@@ -184,6 +184,26 @@ export function DashboardPage() {
           <ScheduleView
             port={currDevice.path}
             onClose={() => setShowScheduleView(false)}
+            onExport={async (exported) => {
+              try {
+                for (const schedule of exported) {
+                  await window.db.saveSchedule(schedule);
+                }
+                setSchedules((prev) => [...(prev || []), ...exported]);
+                showToast(
+                  `Exported ${exported.length} schedule(s) from device!`,
+                  TOAST_DURATION.NORMAL,
+                  TOAST_TYPE.SUCCESS,
+                );
+                setShowScheduleView(false);
+              } catch {
+                showToast(
+                  "Couldn't export schedules. Please try again.",
+                  TOAST_DURATION.LONG,
+                  TOAST_TYPE.ERROR,
+                );
+              }
+            }}
           />
         )}
       </ConnProvider>

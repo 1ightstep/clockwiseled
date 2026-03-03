@@ -1,10 +1,10 @@
 import { DAYS, TOAST_DURATION, TOAST_TYPE, UI } from "@/constants";
 import { useConn } from "@/hooks/useConn";
 import { useToast } from "@/hooks/useToast";
-import { type EventItem } from "@/shared/types";
+import { type EventItem, type ScheduleData } from "@/shared/types";
 import { parseSchedules } from "@/utils/parseSchedules";
 import { formatGetAllSchedulesCommand } from "@/utils/serialFormatter";
-import { Calendar, X } from "lucide-react";
+import { Calendar, Download, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./ScheduleView.css";
 
@@ -13,15 +13,26 @@ const PARSE_DEBOUNCE_MS = 1000;
 type ScheduleViewProps = {
   port: string;
   onClose: () => void;
+  onExport: (schedules: ScheduleData[]) => void;
 };
 
 type ScheduleListType = Record<number, EventItem[]>;
 
-export function ScheduleView({ port, onClose }: ScheduleViewProps) {
+export function ScheduleView({ port, onClose, onExport }: ScheduleViewProps) {
   const [activeSchedules, setActiveSchedules] = useState<ScheduleListType>({});
+  const [selectedDays, setSelectedDays] = useState<Set<number>>(new Set());
   const currentScheduleOutput = useRef<string>("");
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { showToast } = useToast();
+
+  const toggleDay = (index: number) => {
+    setSelectedDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  };
 
   const triggerParse = useCallback(() => {
     const buffer = currentScheduleOutput.current;
@@ -102,7 +113,11 @@ export function ScheduleView({ port, onClose }: ScheduleViewProps) {
             const hasEvents = schedule && schedule.length > 0;
 
             return (
-              <div key={day} className="view-day-column">
+              <div
+                key={day}
+                className={`view-day-column${hasEvents ? " view-day-selectable" : ""}${selectedDays.has(index) ? " view-day-selected" : ""}`}
+                onClick={() => hasEvents && toggleDay(index)}
+              >
                 <span className="view-day-label">{day.substring(0, 3)}</span>
 
                 {hasEvents ? (
@@ -134,6 +149,31 @@ export function ScheduleView({ port, onClose }: ScheduleViewProps) {
         <footer className="view-footer">
           <button className="view-btn-cancel" onClick={onClose}>
             Close
+          </button>
+          <button
+            className="view-btn-export"
+            onClick={() => {
+              const exportData: ScheduleData[] = [];
+              for (const dayIndex of selectedDays) {
+                const events = activeSchedules[dayIndex];
+                if (!events || events.length === 0) continue;
+                const dayName = DAYS[dayIndex];
+                exportData.push({
+                  id: crypto.randomUUID(),
+                  title: `${dayName} Schedule`,
+                  description: `Exported from device`,
+                  day: dayName,
+                  events: events.map((e) => ({
+                    ...e,
+                    id: crypto.randomUUID(),
+                  })),
+                });
+              }
+              onExport(exportData);
+            }}
+            disabled={selectedDays.size === 0}
+          >
+            <Download size={UI.ICON_SIZES.MEDIUM} /> Export
           </button>
         </footer>
       </div>
