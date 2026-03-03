@@ -123,7 +123,7 @@ export function DashboardPage() {
       window.serial.getDevices().then((devices: DeviceType[]) => {
         const formattedDevices = devices.map((device) => {
           if (device.manufacturer?.toLowerCase() === "wch.cn") {
-            return { ...device, manufacturer: "Clockwise Device :)" };
+            return { ...device, manufacturer: "ClockwiseLED Device :)" };
           }
           return device;
         });
@@ -210,10 +210,10 @@ export function DashboardPage() {
 
       <header className="dashboard-header">
         <div className="header-content">
-          <img src={Logo} alt="Clockwise Logo" className="header-logo" />
+          <img src={Logo} alt="ClockwiseLED Logo" className="header-logo" />
           <div>
             <p className="eyebrow">Welcome to</p>
-            <h1>Clockwise dashboard</h1>
+            <h1>ClockwiseLED dashboard</h1>
             <p className="subtle">
               Monitor schedules and keep every device in sync.
             </p>

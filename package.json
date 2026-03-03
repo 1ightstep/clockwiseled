@@ -1,7 +1,7 @@
 {
-  "name": "Clockwise",
+  "name": "ClockwiseLED",
   "author": "lightsteps",
-  "description": "Software for the Clockwise clock.",
+  "description": "Software for the ClockwiseLED clock.",
   "private": true,
   "version": "1.2.0",
   "type": "module",

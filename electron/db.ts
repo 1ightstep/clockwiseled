@@ -59,7 +59,7 @@ function initializeStatements(database: Database.Database): DbStatement {
 function getDatabase(): Database.Database {
   if (!db) {
     const userDataPath = app.getPath("userData");
-    const dbPath = path.join(userDataPath, "clockwise.db");
+    const dbPath = path.join(userDataPath, "clockwiseled.db");
 
     db = new Database(dbPath);
 

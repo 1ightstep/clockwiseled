@@ -34,7 +34,7 @@ function createWindow(): void {
   const isDev = !!process.env.VITE_DEV_SERVER_URL;
 
   win = new BrowserWindow({
-    title: "Clockwise",
+    title: "ClockwiseLED",
     icon: isDev
       ? path.join(__dirname, "../public/Logo.png")
       : path.join(appPath, "dist-electron/../public/Logo.png"),
