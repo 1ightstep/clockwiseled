@@ -12,6 +12,9 @@ export const ARDUINO_COMMANDS = {
   SET: "SET",
   INC: "INC",
   DEC: "DEC",
+  SET_ALARM: "SET_ALARM",
+  PAUSE_ALARM: "PAUSE_ALARM",
+  RESET_ALARM: "RESET_ALARM",
 } as const;
 
 export const DAYS = [

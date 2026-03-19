@@ -1,4 +1,5 @@
 import Logo from "@/assets/Logo.svg";
+import { AlarmView } from "@/components/AlarmView";
 import { ScheduleEditor } from "@/components/ScheduleEditor";
 import { ScheduleView } from "@/components/ScheduleView";
 import { SyncEditor } from "@/components/SyncEditor";
@@ -14,7 +15,7 @@ import { ConnProvider } from "@/contexts/ConnContext";
 import { useToast } from "@/hooks/useToast";
 import { type DeviceType, type ScheduleData } from "@/shared/types";
 import { formatOnCommand } from "@/utils/serialFormatter";
-import { Eye, Pen, Terminal, UploadCloud, X } from "lucide-react";
+import { AlarmClock, Eye, Pen, Terminal, UploadCloud, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import "./DashboardPage.css";
 
@@ -30,6 +31,8 @@ export function DashboardPage() {
   const [showTinkerView, setShowTinkerView] = useState<boolean>(false);
   const [showSyncEditor, setShowSyncEditor] = useState<boolean>(false);
   const [showScheduleView, setShowScheduleView] = useState<boolean>(false);
+  const [showAlarmView, setShowAlarmView] = useState<boolean>(false);
+  const [debugMode, setDebugMode] = useState<boolean>(false);
   const [scheduleData, setScheduleData] = useState<ScheduleData | undefined>();
   const { showToast } = useToast();
 
@@ -173,6 +176,13 @@ export function DashboardPage() {
           />
         )}
 
+        {showAlarmView && currDevice && (
+          <AlarmView
+            port={currDevice.path}
+            onClose={() => setShowAlarmView(false)}
+          />
+        )}
+
         {showTinkerView && currDevice && (
           <TinkerView
             port={currDevice.path}
@@ -299,11 +309,22 @@ export function DashboardPage() {
                     className="device-btn"
                     onClick={() => {
                       setCurrDevice(device);
-                      setShowTinkerView(true);
+                      setShowAlarmView(true);
                     }}
                   >
-                    <Terminal />
+                    <AlarmClock />
                   </button>
+                  {debugMode && (
+                    <button
+                      className="device-btn"
+                      onClick={() => {
+                        setCurrDevice(device);
+                        setShowTinkerView(true);
+                      }}
+                    >
+                      <Terminal />
+                    </button>
+                  )}
                 </div>
               </article>
             ))
@@ -311,6 +332,14 @@ export function DashboardPage() {
             <div>No devices connected</div>
           )}
         </div>
+        <label className="debug-toggle">
+          <input
+            type="checkbox"
+            checked={debugMode}
+            onChange={(e) => setDebugMode(e.target.checked)}
+          />
+          Debug mode
+        </label>
       </section>
     </main>
   );

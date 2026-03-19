@@ -77,6 +77,23 @@ export function formatDecCommand(value: string, side: "l" | "r"): string {
   return `${ARDUINO_COMMANDS.DEC} ${value} ${side}`;
 }
 
+export function formatSetAlarmCommand(
+  hours: number,
+  minutes: number,
+  seconds: number,
+  color: RgbColor,
+): string {
+  return `${ARDUINO_COMMANDS.SET_ALARM} ${hours} ${minutes} ${seconds} ${color.r} ${color.g} ${color.b}`;
+}
+
+export function formatPauseAlarmCommand(): string {
+  return ARDUINO_COMMANDS.PAUSE_ALARM;
+}
+
+export function formatResetAlarmCommand(): string {
+  return ARDUINO_COMMANDS.RESET_ALARM;
+}
+
 export function formatTinkerCommand(input: TinkerCommandInput): string {
   const { type, value, side, color } = input;
 

@@ -41,7 +41,7 @@ function initializeStatements(database) {
 function getDatabase() {
   if (!db) {
     const userDataPath = app.getPath("userData");
-    const dbPath = path.join(userDataPath, "clockwise.db");
+    const dbPath = path.join(userDataPath, "clockwiseled.db");
     db = new Database(dbPath);
     db.exec(`
       CREATE TABLE IF NOT EXISTS schedules (
@@ -171,7 +171,7 @@ function createWindow() {
   const appPath = app.getAppPath();
   const isDev = !!process.env.VITE_DEV_SERVER_URL;
   win = new BrowserWindow({
-    title: "Clockwise",
+    title: "ClockwiseLED",
     icon: isDev ? path.join(__dirname$1, "../public/Logo.png") : path.join(appPath, "dist-electron/../public/Logo.png"),
     webPreferences: {
       nodeIntegration: false,
