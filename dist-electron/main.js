@@ -1,49 +1,44 @@
-import { app, ipcMain, BrowserWindow } from "electron";
-import { createRequire } from "node:module";
-import path from "node:path";
-import url, { fileURLToPath } from "node:url";
-import Database from "better-sqlite3";
-const __filename$2 = fileURLToPath(import.meta.url);
-const __dirname$2 = path.dirname(__filename$2);
-const runtimePaths$1 = globalThis;
-runtimePaths$1.__filename = __filename$2;
-runtimePaths$1.__dirname = __dirname$2;
-let db = null;
-let stmts = null;
-function initializeStatements(database) {
+import { app as c, ipcMain as u, BrowserWindow as O } from "electron";
+import { createRequire as y } from "node:module";
+import l from "node:path";
+import I, { fileURLToPath as S } from "node:url";
+import b from "better-sqlite3";
+const R = S(import.meta.url), A = l.dirname(R), f = globalThis;
+f.__filename = R;
+f.__dirname = A;
+let a = null, T = null;
+function P(e) {
   return {
-    insertSchedule: database.prepare(`
+    insertSchedule: e.prepare(`
       INSERT INTO schedules (id, title, description, day, updated_at)
       VALUES (?, ?, ?, ?, strftime('%s', 'now'))
     `),
-    updateSchedule: database.prepare(`
+    updateSchedule: e.prepare(`
       UPDATE schedules 
       SET title = ?, description = ?, day = ?, updated_at = strftime('%s', 'now')
       WHERE id = ?
     `),
-    deleteSchedule: database.prepare("DELETE FROM schedules WHERE id = ?"),
-    getSchedule: database.prepare("SELECT * FROM schedules WHERE id = ?"),
-    getAllSchedules: database.prepare(
+    deleteSchedule: e.prepare("DELETE FROM schedules WHERE id = ?"),
+    getSchedule: e.prepare("SELECT * FROM schedules WHERE id = ?"),
+    getAllSchedules: e.prepare(
       "SELECT * FROM schedules ORDER BY updated_at DESC"
     ),
-    insertEvent: database.prepare(`
+    insertEvent: e.prepare(`
       INSERT INTO events (id, schedule_id, start_h, start_m, end_h, end_m, r, g, b)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `),
-    deleteEventsBySchedule: database.prepare(
+    deleteEventsBySchedule: e.prepare(
       "DELETE FROM events WHERE schedule_id = ?"
     ),
-    getEventsBySchedule: database.prepare(
+    getEventsBySchedule: e.prepare(
       "SELECT * FROM events WHERE schedule_id = ?"
     )
   };
 }
-function getDatabase() {
-  if (!db) {
-    const userDataPath = app.getPath("userData");
-    const dbPath = path.join(userDataPath, "clockwiseled.db");
-    db = new Database(dbPath);
-    db.exec(`
+function h() {
+  if (!a) {
+    const e = c.getPath("userData"), t = l.join(e, "clockwiseled.db");
+    a = new b(t), a.exec(`
       CREATE TABLE IF NOT EXISTS schedules (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
@@ -67,242 +62,184 @@ function getDatabase() {
       );
 
       CREATE INDEX IF NOT EXISTS idx_events_schedule_id ON events(schedule_id);
-    `);
-    stmts = initializeStatements(db);
+    `), T = P(a);
   }
-  return db;
+  return a;
 }
-function getStatements() {
-  if (!stmts) {
-    getDatabase();
-  }
-  return stmts;
+function _() {
+  return T || h(), T;
 }
-const dbOperations = {
-  saveSchedule: (schedule) => {
-    const database = getDatabase();
-    const statements = getStatements();
-    const txn = database.transaction(() => {
-      const existing = statements.getSchedule.get(String(schedule.id));
-      if (existing) {
-        statements.updateSchedule.run(
-          schedule.title,
-          schedule.description,
-          schedule.day,
-          String(schedule.id)
+const E = {
+  saveSchedule: (e) => {
+    const t = h(), r = _();
+    t.transaction(() => {
+      r.getSchedule.get(String(e.id)) ? (r.updateSchedule.run(
+        e.title,
+        e.description,
+        e.day,
+        String(e.id)
+      ), r.deleteEventsBySchedule.run(String(e.id))) : r.insertSchedule.run(
+        String(e.id),
+        e.title,
+        e.description,
+        e.day
+      );
+      for (const i of e.events)
+        r.insertEvent.run(
+          String(i.id),
+          String(e.id),
+          i.startH,
+          i.startM,
+          i.endH,
+          i.endM,
+          i.r,
+          i.g,
+          i.b
         );
-        statements.deleteEventsBySchedule.run(String(schedule.id));
-      } else {
-        statements.insertSchedule.run(
-          String(schedule.id),
-          schedule.title,
-          schedule.description,
-          schedule.day
-        );
-      }
-      for (const event of schedule.events) {
-        statements.insertEvent.run(
-          String(event.id),
-          String(schedule.id),
-          event.startH,
-          event.startM,
-          event.endH,
-          event.endM,
-          event.r,
-          event.g,
-          event.b
-        );
-      }
-    });
-    txn();
+    })();
   },
   getAllSchedules: () => {
-    getDatabase();
-    const statements = getStatements();
-    const schedules = statements.getAllSchedules.all();
-    return schedules.map((schedule) => {
-      const events = statements.getEventsBySchedule.all(schedule.id);
+    h();
+    const e = _();
+    return e.getAllSchedules.all().map((r) => {
+      const p = e.getEventsBySchedule.all(r.id);
       return {
-        id: schedule.id,
-        title: schedule.title,
-        description: schedule.description,
-        day: schedule.day,
-        events: events.map((e) => ({
-          id: e.id,
-          startH: e.start_h,
-          startM: e.start_m,
-          endH: e.end_h,
-          endM: e.end_m,
-          r: e.r,
-          g: e.g,
-          b: e.b
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        day: r.day,
+        events: p.map((s) => ({
+          id: s.id,
+          startH: s.start_h,
+          startM: s.start_m,
+          endH: s.end_h,
+          endM: s.end_m,
+          r: s.r,
+          g: s.g,
+          b: s.b
         }))
       };
     });
   },
-  deleteSchedule: (id) => {
-    getDatabase();
-    const statements = getStatements();
-    statements.deleteSchedule.run(String(id));
+  deleteSchedule: (e) => {
+    h(), _().deleteSchedule.run(String(e));
   },
   close: () => {
-    if (db) {
-      db.close();
-      db = null;
-      stmts = null;
-    }
+    a && (a.close(), a = null, T = null);
   }
 };
-app.on("before-quit", () => {
-  dbOperations.close();
+c.on("before-quit", () => {
+  E.close();
 });
-const __filename$1 = fileURLToPath(import.meta.url);
-const __dirname$1 = path.dirname(__filename$1);
-const runtimePaths = globalThis;
-runtimePaths.__filename = __filename$1;
-runtimePaths.__dirname = __dirname$1;
-const require$1 = createRequire(import.meta.url);
-const { SerialPort } = require$1("serialport");
-const { ReadlineParser } = require$1("@serialport/parser-readline");
-let win = null;
-let currentPort = null;
-let parser = null;
-function createWindow() {
-  const appPath = app.getAppPath();
-  const isDev = !!process.env.VITE_DEV_SERVER_URL;
-  win = new BrowserWindow({
+const g = S(import.meta.url), m = l.dirname(g), N = globalThis;
+N.__filename = g;
+N.__dirname = m;
+const L = y(import.meta.url), { SerialPort: w } = L("serialport"), { ReadlineParser: U } = L("@serialport/parser-readline");
+let o = null, n = null, d = null;
+function D() {
+  const e = c.getAppPath(), t = !!process.env.VITE_DEV_SERVER_URL;
+  o = new O({
     title: "ClockwiseLED",
-    icon: isDev ? path.join(__dirname$1, "../public/Logo.png") : path.join(appPath, "dist-electron/../public/Logo.png"),
+    icon: t ? l.join(m, "../public/Logo.png") : l.join(e, "dist-electron/../public/Logo.png"),
     webPreferences: {
-      nodeIntegration: false,
-      sandbox: true,
-      contextIsolation: true,
-      preload: isDev ? path.join(__dirname$1, "preload.mjs") : path.join(appPath, "dist-electron/preload.mjs")
+      nodeIntegration: !1,
+      sandbox: !0,
+      contextIsolation: !0,
+      preload: t ? l.join(m, "preload.mjs") : l.join(e, "dist-electron/preload.mjs")
     }
-  });
-  if (isDev) {
-    win.loadURL(process.env.VITE_DEV_SERVER_URL);
-  } else {
-    win.loadURL(
-      url.format({
-        pathname: path.join(__dirname$1, "../dist/index.html"),
-        protocol: "file:",
-        slashes: true
-      })
-    );
-  }
-}
-async function closeCurrentPort() {
-  if (!currentPort || !currentPort.isOpen) return;
-  currentPort.removeAllListeners();
-  if (parser) parser.removeAllListeners();
-  return new Promise((resolve, reject) => {
-    currentPort.close((err) => {
-      if (err) {
-        console.error("Error closing port:", err);
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
-}
-async function connectToPort(portPath) {
-  try {
-    await closeCurrentPort();
-  } catch (err) {
-    console.warn("Failed to close previous port:", err);
-  }
-  currentPort = new SerialPort({
-    path: portPath,
-    baudRate: 9600,
-    autoOpen: true
-  });
-  parser = currentPort.pipe(
-    new ReadlineParser({ delimiter: "\n" })
+  }), t ? o.loadURL(process.env.VITE_DEV_SERVER_URL) : o.loadURL(
+    I.format({
+      pathname: l.join(m, "../dist/index.html"),
+      protocol: "file:",
+      slashes: !0
+    })
   );
-  parser.on("data", (data) => {
-    win == null ? void 0 : win.webContents.send("serial-data", data);
-  });
-  currentPort.on("error", (err) => {
-    console.error("Serial Port Error:", err.message);
-    win == null ? void 0 : win.webContents.send("serial-disconnect");
-    currentPort = null;
-    parser = null;
-  });
-  currentPort.on("close", () => {
-    win == null ? void 0 : win.webContents.send("serial-disconnect");
-    currentPort = null;
-    parser = null;
+}
+async function v() {
+  if (!(!n || !n.isOpen))
+    return n.removeAllListeners(), d && d.removeAllListeners(), new Promise((e, t) => {
+      n.close((r) => {
+        r ? (console.error("Error closing port:", r), t(r)) : e();
+      });
+    });
+}
+async function C(e) {
+  try {
+    await v();
+  } catch (t) {
+    console.warn("Failed to close previous port:", t);
+  }
+  n = new w({
+    path: e,
+    baudRate: 9600,
+    autoOpen: !0
+  }), d = n.pipe(
+    new U({ delimiter: `
+` })
+  ), d.on("data", (t) => {
+    o == null || o.webContents.send("serial-data", t);
+  }), n.on("error", (t) => {
+    console.error("Serial Port Error:", t.message), o == null || o.webContents.send("serial-disconnect"), n = null, d = null;
+  }), n.on("close", () => {
+    o == null || o.webContents.send("serial-disconnect"), n = null, d = null;
   });
 }
-app.whenReady().then(createWindow);
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
+c.whenReady().then(D);
+c.on("window-all-closed", () => {
+  process.platform !== "darwin" && c.quit();
 });
-app.on("before-quit", async () => {
-  await closeCurrentPort();
-  dbOperations.close();
+c.on("before-quit", async () => {
+  await v(), E.close();
 });
-ipcMain.handle("serial-write", async (_, data) => {
-  if (!currentPort || !currentPort.isOpen) {
+u.handle("serial-write", async (e, t) => {
+  if (!n || !n.isOpen)
     throw new Error("Serial port not open");
-  }
-  return new Promise((resolve, reject) => {
-    currentPort.write(
-      Buffer.from(data + "\n", "ascii"),
-      (err) => {
-        if (err) reject(err);
-        else resolve();
+  return new Promise((r, p) => {
+    n.write(
+      Buffer.from(t + `
+`, "ascii"),
+      (s) => {
+        s ? p(s) : r();
       }
     );
   });
 });
-ipcMain.handle("serial-devices", async () => {
+u.handle("serial-devices", async () => {
   try {
-    const ports = await SerialPort.list();
-    return ports.map((port) => ({
-      path: port.path,
-      serialNumber: port.serialNumber,
-      manufacturer: port.manufacturer
+    return (await w.list()).map((t) => ({
+      path: t.path,
+      serialNumber: t.serialNumber,
+      manufacturer: t.manufacturer
     }));
-  } catch (err) {
-    console.error("Error listing serial devices:", err);
-    throw err;
+  } catch (e) {
+    throw console.error("Error listing serial devices:", e), e;
   }
 });
-ipcMain.handle("serial-connect", async (_, portPath) => {
+u.handle("serial-connect", async (e, t) => {
   try {
-    await connectToPort(portPath);
-    return { success: true };
-  } catch (err) {
-    console.error("Error connecting to port:", err);
-    throw err;
+    return await C(t), { success: !0 };
+  } catch (r) {
+    throw console.error("Error connecting to port:", r), r;
   }
 });
-ipcMain.handle("db-get-all-schedules", async () => {
+u.handle("db-get-all-schedules", async () => {
   try {
-    return dbOperations.getAllSchedules();
-  } catch (error) {
-    console.error("Error getting all schedules:", error);
-    throw error;
+    return E.getAllSchedules();
+  } catch (e) {
+    throw console.error("Error getting all schedules:", e), e;
   }
 });
-ipcMain.handle("db-save-schedule", async (_, schedule) => {
+u.handle("db-save-schedule", async (e, t) => {
   try {
-    dbOperations.saveSchedule(schedule);
-    return { success: true };
-  } catch (error) {
-    console.error("Error saving schedule:", error);
-    throw error;
+    return E.saveSchedule(t), { success: !0 };
+  } catch (r) {
+    throw console.error("Error saving schedule:", r), r;
   }
 });
-ipcMain.handle("db-delete-schedule", async (_, id) => {
+u.handle("db-delete-schedule", async (e, t) => {
   try {
-    dbOperations.deleteSchedule(id);
-    return { success: true };
-  } catch (error) {
-    console.error("Error deleting schedule:", error);
-    throw error;
+    return E.deleteSchedule(t), { success: !0 };
+  } catch (r) {
+    throw console.error("Error deleting schedule:", r), r;
   }
 });
